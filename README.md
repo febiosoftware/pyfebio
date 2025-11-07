@@ -29,7 +29,7 @@ Clone with ssh:
 git clone git@github.com:CompOrthoBiomech/pyfebio.git
 ```
 
-**Using uv:**
+**Using uv (preferred):**
 
 Install uv from [here](https://docs.astral.sh/uv/getting-started/installation/)
 
@@ -43,18 +43,30 @@ This will create a virtual environment and install the package.
 
 **Using pip:**
 
+You'll need a python executable that is >=3.11.
+
 In top-level repository directory:
 
 Create a virtual environment:
 
 ```bash
-python -m venv .venv
+/path/to/compatible-python -m venv .venv
 ```
+
+where /path/to/compatible-python is the path to a compatible python executable.
 
 Activate the virtual environment:
 
+On Linux or macOS:
+
 ```bash
 source .venv/bin/activate
+```
+
+On Windows:
+
+```bash
+.venv\Scripts\activate
 ```
 
 Install the package:
@@ -125,8 +137,8 @@ for i, element in enumerate(elements_list):
     elements.add_element(pyfebio.mesh.Hex8Element(id=i + 1, text=",".join(map(str, element))))
 
 # Append nodes and elements to the model's mesh section
-my_model.mesh.nodes.append(nodes)
-my_model.mesh.elements.append(elements)
+my_model.mesh_.nodes.append(nodes)
+my_model.mesh_.elements.append(elements)
 
 # Let's make a node set for top and bottom
 bottom_nodes = [1, 2, 3, 4]
@@ -135,13 +147,13 @@ top_node_set = pyfebio.mesh.NodeSet(name="top", text=",".join(map(str, top_nodes
 bottom_node_set = pyfebio.mesh.NodeSet(name="bottom", text=",".join(map(str, bottom_nodes)))
 
 # Append the node sets to the model's mesh section
-my_model.mesh.node_sets.append(top_node_set)
-my_model.mesh.node_sets.append(bottom_node_set)
+my_model.mesh_.node_sets.append(top_node_set)
+my_model.mesh_.node_sets.append(bottom_node_set)
 
 # We need a material
 # the use of pyfebio.material.MaterialParameter is our solution
 # to handle mapped, math, or directly specified values
-my_material = pyfebio.material.MooneyRivlin(
+my_material = pyfebio.material.CoupledMooneyRivlin(
     id=1,
     name="cartilage",
     c1=pyfebio.material.MaterialParameter(text=10.0),
@@ -153,42 +165,34 @@ my_material = pyfebio.material.MooneyRivlin(
 solid_domain = pyfebio.meshdomains.SolidDomain(name="box", mat="cartilage")
 
 # add the solid domain
-my_model.mesh_domains.add_solid_domain(solid_domain)
+my_model.meshdomains_.add_solid_domain(solid_domain)
 
 # add the material
-my_model.material.add_material(my_material)
+my_model.material_.add_material(my_material)
 
 # Fix the bottom nodes (1 means BC DoF is active)
-fixed_bottom = pyfebio.boundary.BCZeroDisplacement(node_set="bottom",
-                                                   x_dof=1,
-                                                   y_dof=1,
-                                                   z_dof=1)
+fixed_bottom = pyfebio.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1)
 
 # Displace the top nodes in z
 # We need to create a boundary.Value object that references a load curve
 displacement_value = pyfebio.boundary.Value(lc=1, text=-0.2)
-move_top = pyfebio.boundary.BCPrescribedDisplacement(
-    node_set="top", dof="z", value=displacement_value
-)
+move_top = pyfebio.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=displacement_value)
 
 # Add boundary conditions
-my_model.boundary.add_bc(fixed_bottom)
-my_model.boundary.add_bc(move_top)
+my_model.boundary_.add_bc(fixed_bottom)
+my_model.boundary_.add_bc(move_top)
 
 # Now, create the loadcurve 1 we referenced
 curve_points = pyfebio.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])
 load_curve1 = pyfebio.loaddata.LoadCurve(id=1, points=curve_points)
 # And, add it to model
-my_model.load_data.add_load_curve(load_curve1)
+my_model.loaddata_.add_load_curve(load_curve1)
 
-# Finally, save the model to disk
+# Save the model to disk
 my_model.save("my_model.feb")
-```
 
-Run the model from the CLI (assuming febio4 is on your PATH):
-
-```{bash}
-febio4 -i my_model.feb
+# And run it
+pyfebio.model.run_model("my_model.feb")
 ```
 
 ![Short Example Simulation](assets/short_example.gif)
