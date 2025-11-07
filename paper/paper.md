@@ -33,10 +33,14 @@ bibliography: paper.bib
 
 # Summary
 
-The pyfebio package provides a Python interface for FEBio, a finite element analysis software. This package allows users to define FEBio XML model definition files with the Python programming language. Model components are classes that inherit from the pydantic-xml
-BaseXMLModel. This provides the runtime static type checking of the pydantic library, ensuring that the XML model definition files are valid and well-formed. When possible components have default values, minimizing the amount of code required to define a model.
+The pyfebio package provides a Python interface for the FEBio finite element analysis software. This package allows users to define FEBio XML model definition files with the Python programming language. Model components are classes that inherit from the pydantic-xml
+BaseXMLModel. This provides the runtime static type checking of the pydantic library, ensuring that the XML model definition files are valid and well-formed. When possible, components have default values, minimizing the amount of code required to define a model.
+
+Possible applications include automated modelling and simulation pipelines, inverse finite element analysis, sensitity analysis, mesh convergence studies, and others.
 
 # Statement of Need
+
+The Python ecosytem provides a wealth of packages for scientifc computing.
 
 # Acknowledgements
 
