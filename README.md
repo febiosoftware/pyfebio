@@ -63,10 +63,16 @@ On Linux or macOS:
 source .venv/bin/activate
 ```
 
-On Windows:
+On Windows (cmd):
 
 ```bash
-.venv\Scripts\activate
+.\.venv\Scripts\activate.bat
+```
+
+On Windows (powershell):
+
+```bash
+.\.venv\Scripts\Activate.ps1
 ```
 
 Install the package:
