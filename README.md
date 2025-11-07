@@ -1,6 +1,3 @@
-# THIS PROJECT HAS BEEN MIGRATED to the febiosoftware Organizaton
-Please find the active repo [here](https://github.com/febiosoftware/pyfebio)
-
 ## Overview
 
 This is a Python package for generating FEBio input files. We rely heavily on pydantic and pydantic-xml
