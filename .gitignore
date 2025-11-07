@@ -3,7 +3,6 @@
 *.feb
 *.log
 # Specific Directories
-assets/gmsh/
 src/sandbox/
 
 # Byte-compiled / optimized / DLL files
