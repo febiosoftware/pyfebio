@@ -2,8 +2,10 @@
 *.xplt
 *.feb
 *.log
+*.pdf
 # Specific Directories
 src/sandbox/
+jats/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

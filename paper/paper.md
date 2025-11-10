@@ -7,23 +7,19 @@ tags:
 authors:
   - name: Scott C. Sibole
     orcid: 0000-0000-0000-0000
-    equal-contrib: true
     corresponding: true
     affiliation: 1
-  - name: Jason Halloran
-    equal-contrib: false
+  - name: Jason P. Halloran
     affiliation: 1
-  - name: Steve Maas
-    equal-contrib: false
+  - name: Steve A. Maas
     affiliation: "2,3"
-  - name: Michael Ross Herron
-    equal-contrib: false
+  - name: Michael R. Herron
     affiliation: "2,3"
 
 affiliations:
  - name: Applied Sciences Laboratory, Washington State University, United States
    index: 1
- - name: Muscoskeletal Research Laboratory, University of Utah, United States
+ - name: Muscoloskeletal Research Laboratory, University of Utah, United States
    index: 2
  - name: Scientific Computing and Imaging Institute, University of Utah, United States
    index: 3
@@ -34,22 +30,23 @@ bibliography: paper.bib
 # Summary
 
 The finite element method is a popular numerical technique for solving the partial differential equations that describe physical phenomena.
-Its application, referred to as finite element analysis (FEA), has seen ubiquitous adoption across engineering and physics. While many general-purpose FEA software
-packages exist, it is a commonly necessary to extend their functionality for a particular application through custom extensions or plugins often written by the user
-or research community. In biomedical fields, one encounters the need for highly specialized models of biological tissue material behavior, growth mechanics,
-multiphasic physics, active force production, and other complex phenomena. Addressing these challenges was the motivation for the development of the
-FEBio (Finite Elements for Biomechanics) open-source software nearly two decades ago `[@Mass:2012]`.
-
-
+Its application, referred to as finite element analysis (FEA), has seen ubiquitous adoption across engineering and physics. While many
+general-purpose FEA software packages exist, it is commonly necessary to extend their functionality for a particular application through
+custom extensions or plugins often written by the user or research community. In biomedical fields, one encounters the need for highly
+specialized models of biological tissue material behavior, growth mechanics, multiphasic physics, active force production, and other complex
+phenomena. Addressing these challenges was the motivation for the development of the FEBio (Finite Elements for Biomechanics) open-source
+software nearly two decades ago [@Maas:2012].
 
 # Statement of Need
 
-The Python ecosytem provides a wealth of packages for scientifc computing.
+`pyfebio` provides a Python interface for the FEBio finite element analysis software. This package allows users to define FEBio model definition files
+with the Python programming language. An FEBio model is encoded in the Extensible Markup Language (XML), which adopts a tree structure with a root element
+and nested sub-elements. While long-established packages such as `ElementTree` and `lxml` exist for XML parsing and definition, a specialized package with
+predefined XML elements for FEBio model components was desired. To this end, `pyfebio` leverages the `pydantic-xml` package [@pydantic_xml] that
+extends the popular runtime static type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025], for validated XML (de)serialization, to implement
+such model components.
 
-The pyfebio package provides a Python interface for the FEBio finite element analysis software. This package allows users to define FEBio XML model definition files with the Python programming language. Model components are classes that inherit from the pydantic-xml
-BaseXMLModel. This provides the runtime static type checking of the pydantic library, ensuring that the XML model definition files are valid and well-formed. When possible, components have default values, minimizing the amount of code required to define a model.
-
-Possible applications include automated modelling and simulation pipelines, inverse finite element analysis, sensitity analysis, mesh convergence studies, and others.
+A small dependency set was utilized in `pyfebio` to minimize conflicts when integrating with the wider Python ecosytem, which contains a wealth of packages for scientific computing and numerical analysis.
 
 # Acknowledgements
 
