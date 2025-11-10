@@ -8,7 +8,7 @@ for type validation and XML serialization. Many of FEBio's features are covered,
 - [Installation](#installation)
 - [Testing](#testing)
 - [Example](#example)
-- [Documentation](https://comporthobiomech.github.io/pyfebio/index.html)
+- [Documentation](https://febiosoftware.github.io/pyfebio/index.html)
 - [Features](#features)
 
 ## Installation
