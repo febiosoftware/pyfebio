@@ -17,10 +17,7 @@ concurrency:
   cancel-in-progress: false
   
 jobs:
-  docs:
-    environment:
-    name: github-pages
-    url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +35,16 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload docs build directory
-          path: './docs/_build/'
+          path: 'docs/_build/'
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+  
