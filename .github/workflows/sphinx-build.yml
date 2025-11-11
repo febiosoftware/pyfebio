@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload docs build directory
-          path: 'docs/_build/'
+          path: '_build/'
   deploy:
     environment:
       name: github-pages
