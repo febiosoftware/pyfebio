@@ -44,7 +44,8 @@ with the Python programming language. An FEBio model is encoded in the Extensibl
 and nested sub-elements. While long-established packages such as `ElementTree` and `lxml` exist for XML parsing and definition, a specialized package with
 predefined XML elements for FEBio model components was desired. To this end, `pyfebio` leverages the `pydantic-xml` package [@pydantic_xml] that
 extends the popular runtime static type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025], for validated XML (de)serialization, to implement
-such model components.
+such model components. In addition to type validation, this approach also allows the enforcement of custom constraints on model values when appropriate. When possible,
+default values are assigned to class attributes to reduce the amount of code required when defining an FEBio model.
 
 A small dependency set was utilized in `pyfebio` to minimize conflicts when integrating with the wider Python ecosytem, which contains a wealth of packages for scientific computing and numerical analysis.
 
