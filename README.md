@@ -13,39 +13,9 @@ for type validation and XML serialization. Many of FEBio's features are covered,
 
 ## Installation
 
-We will build PyPi packages later. For now, you can install from source:
+### From PyPi
 
-Clone with https:
-
-```bash
-git clone https://github.com/CompOrthoBiomech/pyfebio.git
-```
-
-Or,
-
-Clone with ssh:
-
-```bash
-git clone git@github.com:CompOrthoBiomech/pyfebio.git
-```
-
-**Using uv (preferred):**
-
-Install uv from [here](https://docs.astral.sh/uv/getting-started/installation/)
-
-In top-level repository directory:
-
-```bash
-uv sync
-```
-
-This will create a virtual environment and install the package.
-
-**Using pip:**
-
-You'll need a python executable that is >=3.11.
-
-In top-level repository directory:
+With pip:
 
 Create a virtual environment:
 
@@ -78,14 +48,38 @@ On Windows (powershell):
 Install the package:
 
 ```bash
-pip install .
+pip install pyfebio
 ```
 
-If you want to run the tests, additionally install the dev group dependencies:
+### From Source (with uv manager)
+
+Clone with https:
 
 ```bash
-pip install . --group dev
+git clone https://github.com/CompOrthoBiomech/pyfebio.git
 ```
+
+Or,
+
+Clone with ssh:
+
+```bash
+git clone git@github.com:CompOrthoBiomech/pyfebio.git
+```
+
+**Install uv:**
+
+Install uv from [here](https://docs.astral.sh/uv/getting-started/installation/)
+
+**Sync the uv environment**
+
+In top-level repository directory:
+
+```bash
+uv sync
+```
+
+This will create a virtual environment and install the package.
 
 ## Testing
 
