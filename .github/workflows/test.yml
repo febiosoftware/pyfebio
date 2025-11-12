@@ -12,7 +12,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
       - name: Install dependencies
+        env:
+          FEBIO_URL: ${{ secrets.FEBIO_URL }}
         run: |
+          curl -L "$FEBIO_URL" --output FEBio4.tar.gz
+          tar -xvf FEBio4.tar.gz
+          echo "$GITHUB_WORKSPACE/FEBio4/bin/" >> $GITHUB_PATH
           pip install pytest pytest-cov
           pip install .
 
