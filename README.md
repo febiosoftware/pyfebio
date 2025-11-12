@@ -1,4 +1,4 @@
-![PyPI - Version](https://img.shields.io/pypi/v/pyfebio?logoColor=blue&color=blue)
+[![PyPI - Version](https://img.shields.io/pypi/v/pyfebio?logoColor=blue&color=blue)](https://pypi.org/project/pyfebio/)
 
 ## Overview
 
