@@ -1,3 +1,5 @@
+![PyPI - Version](https://img.shields.io/pypi/v/pyfebio?logoColor=blue&color=blue)
+
 ## Overview
 
 This is a Python package for generating FEBio input files. We rely heavily on pydantic and pydantic-xml
@@ -202,11 +204,9 @@ pyfebio.model.run_model("my_model.feb")
 
 Brief overview, see module documentation for more details. Unchecked are not yet implemented.
 
-:white_check_mark: Implemented and tested
-
-:ballot_box_with_check: Implemented but untested
-
-:x: Not yet implemented
+✅ Implemented and tested
+☑️ Implemented but untested
+❌ Not yet implemented
 
 - Control
   - :white_check_mark: All control settings
