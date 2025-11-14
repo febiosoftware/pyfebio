@@ -37,11 +37,19 @@ specialized models of biological tissue material behavior, growth mechanics, mul
 phenomena. Addressing these challenges was the motivation for the development of the FEBio (Finite Elements for Biomechanics) open-source
 software nearly two decades ago [@Maas:2012]. FEBio has been widely adopted in the biomedical community [TODO: add some stats here]
 
-`pyfebio` is a Python package enabling programmatic generation of FEBio model definition files. The Python ecosystem provides a rich set of tools for scientific computing,
-data science and engineering, machine learning, and visualization.
+`pyfebio` is a Python package supporting programmatic generation of FEBio model definition files. Beyond enabling scripted modeling workflows, belonging to
+the wider Python ecosystem provides seamless integration with many packages for scientific computing, data science and visualization, machine learning, *etc*.
 
 # Statement of Need
 
+## Similar Projects
+
+- `febio-python` -- This package is similar in many ways to `pyfebio` with the primary difference being `pyfebio` explicitly represents model components, whereas
+`febio-python` employs more abstraction. Both approaches have advantages with `pyfebio` allowing for strong runtime validation with `pydantic` and `febio-python`
+allowing for easier generalization.
+- `interFEBio`
+- `waffleiron`
+- `FEPyio`
 
 # Methods
 
@@ -49,11 +57,10 @@ An FEBio model is encoded in the Extensible Markup Language (XML), which adopts 
 and nested sub-elements. While long-established packages such as `ElementTree` and `lxml` exist for XML parsing and definition,
 a specialized package with predefined XML elements for FEBio model components was desired. To this end, `pyfebio` leverages the
 `pydantic-xml` package [@pydantic_xml] that extends the popular runtime static type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025],
-for validated XML (de)serialization. In addition to type validation, this approach also allows the enforcement of custom constraints
-on model values when appropriate. When possible, default values are assigned to class attributes to reduce the amount of code required
-when defining an FEBio model.
+for validated XML (de)serialization. In addition to type validation, this approach also allows for the enforcement of custom constraints
+on model values when appropriate e.g. an elastic modulus must be positive. When possible, default values are assigned to class attributes 
+to reduce the amount of code required when defining an FEBio model.
 
-A small dependency set was utilized in `pyfebio` to minimize conflicts when integrating with the wider Python ecosytem, which contains a wealth of packages for scientific computing and numerical analysis.
 
 # Acknowledgements
 
