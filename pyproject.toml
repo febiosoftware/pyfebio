@@ -1,6 +1,6 @@
 [project]
 name = "pyfebio"
-version = "0.1.1"
+version = "0.1.0"
 description = "A Python API for the FEBio finite element solver."
 readme = "README.md"
 requires-python = ">=3.11"
