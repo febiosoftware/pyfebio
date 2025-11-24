@@ -19,6 +19,7 @@ from . import (
     output,
     rigid,
     step,
+    xplt,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "rigid",
     "step",
     "include",
+    "xplt",
 ]
