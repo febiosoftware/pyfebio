@@ -4,6 +4,48 @@ Getting Started
 Installation
 ------------
 
+From PyPi
+~~~~~~~~~
+
+With pip:
+
+Create a virtual environment:
+
+.. code-block:: bash
+
+    /path/to/compatible-python -m venv .venv
+
+where `/path/to/compatible-python` is the path to a compatible python executable.
+
+Activate the virtual environment:
+
+On Linux or macOS:
+
+.. code-block:: bash
+
+    source .venv/bin/activate
+
+On Windows (cmd):
+
+.. code-block:: bash
+
+    .\.venv\Scripts\activate.bat
+
+On Windows (powershell):
+
+.. code-block:: bash
+
+    .\.venv\Scripts\Activate.ps1
+
+Install the package:
+
+.. code-block:: bash
+
+    pip install pyfebio
+
+From Source (with uv manager)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Clone with https:
 
 .. code-block:: bash
@@ -29,40 +71,6 @@ In top-level repository directory:
     uv sync
 
 This will create a virtual environment and install the package.
-
-**Using pip:**
-
-In top-level repository directory:
-
-Create a virtual environment:
-
-.. code-block:: bash
-
-    python -m venv .venv
-
-Activate the virtual environment:
-
-.. code-block:: bash
-
-    source .venv/bin/activate
-
-Install the package:
-
-.. code-block:: bash
-
-    pip install -e .
-
-If you want to run the tests, additionally install the dev group dependencies:
-
-.. code-block:: bash
-
-    pip install . --group dev
-
-To verify the installation, run:
-
-.. code-block:: bash
-
-    python -c "import pyfebio"
 
 Testing
 ~~~~~~~
