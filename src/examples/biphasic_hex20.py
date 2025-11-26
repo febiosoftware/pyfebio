@@ -48,6 +48,7 @@ my_model.output_.add_plotfile(
             feb.output.Var(type="displacement"),
             feb.output.Var(type="effective fluid pressure"),
             feb.output.Var(type="nodal fluid flux"),
+            feb.output.Var(type="Lagrange strain"),
         ]
     )
 )

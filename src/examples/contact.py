@@ -52,6 +52,7 @@ my_model.output_.add_plotfile(
             feb.output.Var(type="displacement"),
             feb.output.Var(type="contact pressure"),
             feb.output.Var(type="contact gap"),
+            feb.output.Var(type="Lagrange strain"),
         ]
     )
 )
