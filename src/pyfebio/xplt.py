@@ -392,15 +392,32 @@ def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
             continue
         if TAG_LUT[tag].leaf:
             max_depth = MAX_DEPTH
-            block["data"] = np.frombuffer(
-                child, dtype=_DTYPES[TAG_LUT[tag].format], offset=0, count=count // _DTYPES_SIZE[TAG_LUT[tag].format]
-            )
+            if TAG_LUT[tag].name == "PLT_STATE_VAR_DATA":
+                data = {}
+                j = 0
+                total_size = 0
+                while j < len(child):
+                    region_id = np.frombuffer(child[j : j + 4], count=1, dtype=_DTYPES["int32"])[0]
+                    region_size = np.frombuffer(child[j + 4 : j + 8], count=1, dtype=_DTYPES["int32"])[0]
+                    data[region_id] = np.frombuffer(
+                        child[j + 8 : j + 8 + region_size],
+                        dtype=_DTYPES[TAG_LUT[tag].format],
+                    )
+                    total_size += region_size
+                    j += region_size + 8
+                block["data"] = data
+                block["size"] = total_size
+            else:
+                block["data"] = np.frombuffer(
+                    child, dtype=_DTYPES[TAG_LUT[tag].format], offset=0, count=count // _DTYPES_SIZE[TAG_LUT[tag].format]
+                )
             if TAG_LUT[tag].format == "szname":
-                if block["data"].size == DI_NAME_SIZE:
+                assert isinstance(block["data"], np.ndarray)
+                if block["size"] == DI_NAME_SIZE:
                     block["data"] = block["data"].tobytes()
                     str_end = block["data"].find(b"\x00")
                     block["data"] = block["data"][0:str_end].decode("utf-8")
-                elif block["data"].size > 0:
+                elif block["size"] > 0:
                     block["data"] = block["data"].tobytes()
                     str_start = block["data"].rfind(b"\x00")
                     block["data"] = block["data"][str_start + 1 :].decode("utf-8")
@@ -414,69 +431,9 @@ def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
     return blocks
 
 
-def _read_state_section():
-    pass
-
-
-def _read_dictionary():
-    pass
-
-
-def _read_mesh():
-    pass
-
-
-def _read_dict_item():
-    pass
-
-
-def _create_materials():
-    pass
-
-
-def _build_mesh():
-    pass
-
-
-def _read_global_dict_items():
-    pass
-
-
-def _read_material_dict_items():
-    pass
-
-
-def _read_node_dict_items():
-    pass
-
-
-def _read_elem_dict_items():
-    pass
-
-
-def _read_face_dict_items():
-    pass
-
-
-def _read_edge_dict_items():
-    pass
-
-
 def parse_xplt(filename: str):
     with open(filename, "rb") as fid:
         buffer = fid.read()
         check_file_is_febio(buffer)
         blocks = parse_blocks(buffer[4:])
         log.info(blocks)
-        # _read_state_section()
-        # _read_dictionary()
-        # _read_mesh()
-        # _read_dict_item()
-        # _create_materials()
-        # _build_mesh()
-        # _read_global_dict_items()
-        # _read_material_dict_items()
-        # _read_node_dict_items()
-        # _read_elem_dict_items()
-        # _read_face_dict_items()
-        # _read_edge_dict_items()
