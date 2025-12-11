@@ -416,13 +416,13 @@ def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
                 if block["size"] == DI_NAME_SIZE:
                     block["data"] = block["data"].tobytes()
                     str_end = block["data"].find(b"\x00")
-                    block["data"] = block["data"][0:str_end].decode("utf-8")
+                    block["data"] = [block["data"][0:str_end].decode("utf-8")]
                 elif block["size"] > 0:
                     block["data"] = block["data"].tobytes()
                     str_start = block["data"].rfind(b"\x00")
-                    block["data"] = block["data"][str_start + 1 :].decode("utf-8")
+                    block["data"] = [block["data"][str_start + 1 :].decode("utf-8")]
                 else:
-                    block["data"] = ""
+                    block["data"] = [""]
         else:
             if max_depth > 1:
                 block["data"] = parse_blocks(child, data_offset=data_offset + i + 8, max_depth=max_depth - 1)
@@ -431,9 +431,111 @@ def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
     return blocks
 
 
+@dataclass
+class Surface:
+    name: str
+    id: int
+    nfaces: int
+    max_facet_nodes: int
+    faces: list[list[int]]
+
+
+SURFACE_HDR_LUT = {
+    "PLT_SURFACE_ID": "id",
+    "PLT_SURFACE_NAME": "name",
+    "PLT_SURFACE_FACES": "nfaces",
+    "PLT_SURFACE_MAX_FACET_NODES": "max_facet_nodes",
+    "PLT_SURFACE_FACET_NODES": "faces",
+}
+
+
+def assemble_surfaces(surface_section: dict):
+    surfaces = []
+    for surface in surface_section["data"]:
+        surface_dict = {}
+        for block in surface["data"]:
+            match block["name"]:
+                case "PLT_SURFACE_HDR":
+                    for header_item in block["data"]:
+                        surface_dict[SURFACE_HDR_LUT[header_item["name"]]] = header_item["data"][0]
+                case "PLT_FACE_LIST":
+                    surface_dict["faces"] = []
+                    for face_list_item in block["data"]:
+                        surface_dict["faces"].append(list(face_list_item["data"]))
+                case _:
+                    continue
+
+        surfaces.append(Surface(**surface_dict))
+    return surfaces
+
+
+@dataclass
+class Domain:
+    id: int
+    name: str
+    etype: int
+    nelem: int
+    elements: list[list[int]]
+
+
+DOMAIN_HDR_LUT = {"PLT_DOM_ELEM_TYPE": "etype", "PLT_DOM_NAME": "name", "PLT_DOM_PART_ID": "id", "PLT_DOM_ELEMS": "nelem"}
+
+
+def assemble_domains(domain_section: dict):
+    domains = []
+    for domain in domain_section["data"]:
+        domain_dict = {}
+        for domain_item in domain["data"]:
+            match domain_item["name"]:
+                case "PLT_DOMAIN_HDR":
+                    for header_item in domain_item["data"]:
+                        domain_dict[DOMAIN_HDR_LUT[header_item["name"]]] = header_item["data"][0]
+                case "PLT_DOM_ELEM_LIST":
+                    domain_dict["elements"] = []
+                    for elem_list_item in domain_item["data"]:
+                        domain_dict["elements"].append(list(elem_list_item["data"]))
+        domains.append(Domain(**domain_dict))
+    return domains
+
+
+@dataclass
+class Nodes:
+    dimension: int
+    nnodes: int
+    ids: list[int]
+    coords: list[list[float]]
+
+
+NODE_HDR_LUT = {"PLT_NODE_DIM": "dimension", "PLT_NODE_SIZE": "nnodes"}
+
+
+def assemble_nodes(node_section: dict):
+    node_dict = {}
+    for node_item in node_section["data"]:
+        match node_item["name"]:
+            case "PLT_NODE_HEADER":
+                for header_item in node_item["data"]:
+                    node_dict[NODE_HDR_LUT[header_item["name"]]] = header_item["data"][0]
+            case "PLT_NODE_COORDS":
+                node_dict["ids"] = [node[0] for node in node_item["data"]]
+                node_dict["coords"] = [node.tolist()[1:] for node in node_item["data"]]
+    return Nodes(**node_dict)
+
+
 def parse_xplt(filename: str):
     with open(filename, "rb") as fid:
         buffer = fid.read()
         check_file_is_febio(buffer)
         blocks = parse_blocks(buffer[4:])
-        log.info(blocks)
+        for block in blocks:
+            if block["name"] == "PLT_MESH":
+                for block2 in block["data"]:
+                    match block2["name"]:
+                        case "PLT_NODE_SECTION":
+                            log.info(assemble_nodes(block2))
+                        case "PLT_DOMAIN_SECTION":
+                            log.info(assemble_domains(block2))
+                        case "PLT_SURFACE_SECTION":
+                            log.info(assemble_surfaces(block2))
+                        case _:
+                            continue
