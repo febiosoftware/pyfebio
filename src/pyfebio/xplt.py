@@ -10,7 +10,9 @@ import logging
 from enum import Enum, auto
 from typing import Literal
 
+import h5py
 import numpy as np
+import pyarrow as pa
 from pydantic import Field, TypeAdapter
 from pydantic.dataclasses import dataclass
 
@@ -52,6 +54,7 @@ def dtypes_to_little_endian(_DTYPES):
 class Xtag:
     name: str
     pyname: str
+    level: int
     leaf: bool = False
     format: Literal["float32", "uint32", "int32", "szname", "node"] = "int32"
 
@@ -61,142 +64,142 @@ FEBIO_TAG = int(0x00464542)
 TAG_LUT = {
     # Root/
     # Root/Header
-    int(0x01000000): Xtag(name="PLT_ROOT", pyname="root"),
-    int(0x1010000): Xtag(name="PLT_HEADER", pyname="header"),
-    int(0x01010001): Xtag(name="PLT_HDR_VERSION", pyname="version", leaf=True),
-    int(0x01010004): Xtag(name="PLT_HDR_COMPRESSION", pyname="compression", leaf=True),
-    int(0x01010005): Xtag(name="PLT_HDR_AUTHOR", pyname="author", leaf=True),
-    int(0x01010006): Xtag(name="PLT_HDR_SOFTWARE", pyname="software", leaf=True),
-    int(0x01010007): Xtag(name="PLT_HDR_UNITS", pyname="units", leaf=True, format="szname"),
+    int(0x01000000): Xtag(name="PLT_ROOT", level=0, pyname="root"),
+    int(0x1010000): Xtag(name="PLT_HEADER", level=0, pyname="header"),
+    int(0x01010001): Xtag(name="PLT_HDR_VERSION", level=1, pyname="version", leaf=True),
+    int(0x01010004): Xtag(name="PLT_HDR_COMPRESSION", level=1, pyname="compression", leaf=True),
+    int(0x01010005): Xtag(name="PLT_HDR_AUTHOR", level=1, pyname="author", leaf=True),
+    int(0x01010006): Xtag(name="PLT_HDR_SOFTWARE", level=1, pyname="software", leaf=True),
+    int(0x01010007): Xtag(name="PLT_HDR_UNITS", level=1, pyname="units", leaf=True, format="szname"),
     # Root/Dictionary
-    int(0x01020000): Xtag(name="PLT_DICTIONARY", pyname="dictionary"),
-    int(0x01020001): Xtag(name="PLT_DIC_ITEM", pyname="item"),
-    int(0x01020002): Xtag(name="PLT_DIC_ITEM_TYPE", pyname="itype", leaf=True),
-    int(0x01020003): Xtag(name="PLT_DIC_ITEM_FMT", pyname="iformat", leaf=True),
-    int(0x01020004): Xtag(name="PLT_DIC_ITEM_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01020005): Xtag(name="PLT_DIC_ITEM_ARRAYSIZE", pyname="array_size", leaf=True),
-    int(0x01020006): Xtag(name="PLT_DIC_ITEM_ARRAYNAME", pyname="array_name", leaf=True, format="szname"),
-    int(0x01020007): Xtag(name="PLT_DIC_ITEM_UNITS", pyname="units", leaf=True, format="szname"),
-    int(0x01021000): Xtag(name="PLT_DIC_GLOBAL", pyname="dic_global"),
-    int(0x01023000): Xtag(name="PLT_DIC_NODAL", pyname="dic_nodal"),
-    int(0x01024000): Xtag(name="PLT_DIC_DOMAIN", pyname="dic_domain"),
-    int(0x01025000): Xtag(name="PLT_DIC_SURFACE", pyname="dic_surface"),
-    int(0x01026000): Xtag(name="PLT_DIC_EDGE", pyname="dic_edge"),
+    int(0x01020000): Xtag(name="PLT_DICTIONARY", level=0, pyname="dictionary"),
+    int(0x01021000): Xtag(name="PLT_DIC_GLOBAL", level=1, pyname="dic_global"),
+    int(0x01023000): Xtag(name="PLT_DIC_NODAL", level=1, pyname="dic_nodal"),
+    int(0x01024000): Xtag(name="PLT_DIC_DOMAIN", level=1, pyname="dic_domain"),
+    int(0x01025000): Xtag(name="PLT_DIC_SURFACE", level=1, pyname="dic_surface"),
+    int(0x01026000): Xtag(name="PLT_DIC_EDGE", level=1, pyname="dic_edge"),
+    int(0x01020001): Xtag(name="PLT_DIC_ITEM", level=2, pyname="item"),
+    int(0x01020002): Xtag(name="PLT_DIC_ITEM_TYPE", level=3, pyname="itype", leaf=True),
+    int(0x01020003): Xtag(name="PLT_DIC_ITEM_FMT", level=3, pyname="iformat", leaf=True),
+    int(0x01020004): Xtag(name="PLT_DIC_ITEM_NAME", level=3, pyname="name", leaf=True, format="szname"),
+    int(0x01020005): Xtag(name="PLT_DIC_ITEM_ARRAYSIZE", level=3, pyname="array_size", leaf=True),
+    int(0x01020006): Xtag(name="PLT_DIC_ITEM_ARRAYNAME", level=3, pyname="array_name", leaf=True, format="szname"),
+    int(0x01020007): Xtag(name="PLT_DIC_ITEM_UNITS", level=3, pyname="units", leaf=True, format="szname"),
     # Mesh/
-    int(0x01040000): Xtag(name="PLT_MESH", pyname="mesh"),
+    int(0x01040000): Xtag(name="PLT_MESH", level=0, pyname="mesh"),
     # Mesh/Nodes
-    int(0x01041000): Xtag(name="PLT_NODE_SECTION", pyname="nodes"),
-    int(0x01041100): Xtag(name="PLT_NODE_HEADER", pyname="header"),
-    int(0x01041101): Xtag(name="PLT_NODE_SIZE", pyname="nnodes", leaf=True),
-    int(0x01041102): Xtag(name="PLT_NODE_DIM", pyname="dimension", leaf=True),
-    int(0x01041103): Xtag(name="PLT_NODE_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01041200): Xtag(name="PLT_NODE_COORDS", pyname="coords", leaf=True, format="node"),
+    int(0x01041000): Xtag(name="PLT_NODE_SECTION", level=1, pyname="nodes"),
+    int(0x01041100): Xtag(name="PLT_NODE_HEADER", level=2, pyname="header"),
+    int(0x01041101): Xtag(name="PLT_NODE_SIZE", level=3, pyname="nnodes", leaf=True),
+    int(0x01041102): Xtag(name="PLT_NODE_DIM", level=3, pyname="dimension", leaf=True),
+    int(0x01041103): Xtag(name="PLT_NODE_NAME", level=3, pyname="name", leaf=True, format="szname"),
+    int(0x01041200): Xtag(name="PLT_NODE_COORDS", level=3, pyname="coords", leaf=True, format="node"),
     # Mesh/Domains
-    int(0x01042000): Xtag(name="PLT_DOMAIN_SECTION", pyname="domains"),
+    int(0x01042000): Xtag(name="PLT_DOMAIN_SECTION", level=1, pyname="domains"),
     # Mesh/Domains/Domain
-    int(0x01042100): Xtag(name="PLT_DOMAIN", pyname="domain"),
-    int(0x01042101): Xtag(name="PLT_DOMAIN_HDR", pyname="header"),
-    int(0x01042102): Xtag(name="PLT_DOM_ELEM_TYPE", pyname="etype", leaf=True),
-    int(0x01042103): Xtag(name="PLT_DOM_PART_ID", pyname="id", leaf=True),
-    int(0x01032104): Xtag(name="PLT_DOM_ELEMS", pyname="nelems", leaf=True),
-    int(0x01032105): Xtag(name="PLT_DOM_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01042200): Xtag(name="PLT_DOM_ELEM_LIST", pyname="elements", leaf=False),
-    int(0x01042201): Xtag(name="PLT_ELEMENT", pyname="element", leaf=True),
+    int(0x01042100): Xtag(name="PLT_DOMAIN", level=2, pyname="domain"),
+    int(0x01042101): Xtag(name="PLT_DOMAIN_HDR", level=3, pyname="header"),
+    int(0x01042102): Xtag(name="PLT_DOM_ELEM_TYPE", level=4, pyname="etype", leaf=True),
+    int(0x01042103): Xtag(name="PLT_DOM_PART_ID", level=4, pyname="id", leaf=True),
+    int(0x01032104): Xtag(name="PLT_DOM_ELEMS", level=4, pyname="nelems", leaf=True),
+    int(0x01032105): Xtag(name="PLT_DOM_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01042200): Xtag(name="PLT_DOM_ELEM_LIST", level=4, pyname="elements", leaf=False),
+    int(0x01042201): Xtag(name="PLT_ELEMENT", level=5, pyname="element", leaf=True),
     # Mesh/Surfaces
-    int(0x01043000): Xtag(name="PLT_SURFACE_SECTION", pyname="surfaces"),
+    int(0x01043000): Xtag(name="PLT_SURFACE_SECTION", level=1, pyname="surfaces"),
     # Mesh/Surfaces/Surface
-    int(0x01043100): Xtag(name="PLT_SURFACE", pyname="surface"),
-    int(0x01043101): Xtag(name="PLT_SURFACE_HDR", pyname="header"),
-    int(0x01043102): Xtag(name="PLT_SURFACE_ID", pyname="id", leaf=True),
-    int(0x01043103): Xtag(name="PLT_SURFACE_FACES", pyname="nfaces", leaf=True),
-    int(0x01043104): Xtag(name="PLT_SURFACE_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01043105): Xtag(name="PLT_SURFACE_MAX_FACET_NODES", pyname="max_nodes", leaf=True),
-    int(0x01043200): Xtag(name="PLT_FACE_LIST", pyname="faces"),
-    int(0x01043201): Xtag(name="PLT_FACE", pyname="face", leaf=True),
-    int(0x01044000): Xtag(name="PLT_NODESET_SECTION", pyname="node_sets"),
-    int(0x01044100): Xtag(name="PLT_NODESET", pyname="node_set"),
-    int(0x01044101): Xtag(name="PLT_NODESET_HDR", pyname="header"),
-    int(0x01044102): Xtag(name="PLT_NODESET_ID", pyname="id", leaf=True),
-    int(0x01044103): Xtag(name="PLT_NODESET_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01044104): Xtag(name="PLT_NODESET_SIZE", pyname="nnodes", leaf=True),
-    int(0x01044200): Xtag(name="PLT_NODESET_LIST", pyname="nodes", leaf=True),
-    int(0x01045000): Xtag(name="PLT_PARTS_SECTION", pyname="parts"),
-    int(0x01045100): Xtag(name="PLT_PART", pyname="part"),
-    int(0x01045101): Xtag(name="PLT_PART_ID", pyname="id", leaf=True),
-    int(0x01045102): Xtag(name="PLT_PART_NAME", pyname="name", leaf=True, format="szname"),
+    int(0x01043100): Xtag(name="PLT_SURFACE", level=2, pyname="surface"),
+    int(0x01043101): Xtag(name="PLT_SURFACE_HDR", level=3, pyname="header"),
+    int(0x01043102): Xtag(name="PLT_SURFACE_ID", level=4, pyname="id", leaf=True),
+    int(0x01043103): Xtag(name="PLT_SURFACE_FACES", level=4, pyname="nfaces", leaf=True),
+    int(0x01043104): Xtag(name="PLT_SURFACE_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01043105): Xtag(name="PLT_SURFACE_MAX_FACET_NODES", level=4, pyname="max_nodes", leaf=True),
+    int(0x01043200): Xtag(name="PLT_FACE_LIST", level=3, pyname="faces"),
+    int(0x01043201): Xtag(name="PLT_FACE", level=4, pyname="face", leaf=True),
+    int(0x01044000): Xtag(name="PLT_NODESET_SECTION", level=1, pyname="node_sets"),
+    int(0x01044100): Xtag(name="PLT_NODESET", level=2, pyname="node_set"),
+    int(0x01044101): Xtag(name="PLT_NODESET_HDR", level=3, pyname="header"),
+    int(0x01044102): Xtag(name="PLT_NODESET_ID", level=4, pyname="id", leaf=True),
+    int(0x01044103): Xtag(name="PLT_NODESET_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01044104): Xtag(name="PLT_NODESET_SIZE", level=4, pyname="nnodes", leaf=True),
+    int(0x01044200): Xtag(name="PLT_NODESET_LIST", level=4, pyname="nodes", leaf=True),
+    int(0x01045000): Xtag(name="PLT_PARTS_SECTION", level=1, pyname="parts"),
+    int(0x01045100): Xtag(name="PLT_PART", level=2, pyname="part"),
+    int(0x01045101): Xtag(name="PLT_PART_ID", level=3, pyname="id", leaf=True),
+    int(0x01045102): Xtag(name="PLT_PART_NAME", level=3, pyname="name", leaf=True, format="szname"),
     # Mesh/ElementSets
     # element set section was added in 4.1
-    int(0x01046000): Xtag(name="PLT_ELEMENTSET_SECTION", pyname="element_sets"),
+    int(0x01046000): Xtag(name="PLT_ELEMENTSET_SECTION", level=1, pyname="element_sets"),
     # Mesh/ElementSets/ElementSet
-    int(0x01046100): Xtag(name="PLT_ELEMENTSET", pyname="element_set"),
-    int(0x01046101): Xtag(name="PLT_ELEMENTSET_HDR", pyname="header"),
-    int(0x01046102): Xtag(name="PLT_ELEMENTSET_ID", pyname="id", leaf=True),
-    int(0x01046103): Xtag(name="PLT_ELEMENTSET_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01046104): Xtag(name="PLT_ELEMENTSET_SIZE", pyname="nelems", leaf=True),
-    int(0x01046200): Xtag(name="PLT_ELEMENTSET_LIST", pyname="elements", leaf=True),
+    int(0x01046100): Xtag(name="PLT_ELEMENTSET", level=2, pyname="element_set"),
+    int(0x01046101): Xtag(name="PLT_ELEMENTSET_HDR", level=3, pyname="header"),
+    int(0x01046102): Xtag(name="PLT_ELEMENTSET_ID", level=4, pyname="id", leaf=True),
+    int(0x01046103): Xtag(name="PLT_ELEMENTSET_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01046104): Xtag(name="PLT_ELEMENTSET_SIZE", level=4, pyname="nelems", leaf=True),
+    int(0x01046200): Xtag(name="PLT_ELEMENTSET_LIST", level=4, pyname="elements", leaf=True),
     # Mesh/FacetSets
     # facet set section was added in 4.1
-    int(0x01047000): Xtag(name="PLT_FACETSET_SECTION", pyname="facet_sets"),
+    int(0x01047000): Xtag(name="PLT_FACETSET_SECTION", level=1, pyname="facet_sets"),
     # Mesh/FacetSets/FacetSet
-    int(0x01047100): Xtag(name="PLT_FACETSET", pyname="facet_set"),
-    int(0x01047101): Xtag(name="PLT_FACETSET_HDR", pyname="header"),
-    int(0x01047102): Xtag(name="PLT_FACETSET_ID", pyname="id", leaf=True),
-    int(0x01047103): Xtag(name="PLT_FACETSET_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01047104): Xtag(name="PLT_FACETSET_SIZE", pyname="nfacets", leaf=True),
-    int(0x01047105): Xtag(name="PLT_FACETSET_MAXNODES", pyname="max_nodes", leaf=True),
-    int(0x01047200): Xtag(name="PLT_FACETSET_LIST", pyname="facets", leaf=False),
-    int(0x01047201): Xtag(name="PLT_FACET", pyname="facet", leaf=True),
+    int(0x01047100): Xtag(name="PLT_FACETSET", level=2, pyname="facet_set"),
+    int(0x01047101): Xtag(name="PLT_FACETSET_HDR", level=3, pyname="header"),
+    int(0x01047102): Xtag(name="PLT_FACETSET_ID", level=4, pyname="id", leaf=True),
+    int(0x01047103): Xtag(name="PLT_FACETSET_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01047104): Xtag(name="PLT_FACETSET_SIZE", level=4, pyname="nfacets", leaf=True),
+    int(0x01047105): Xtag(name="PLT_FACETSET_MAXNODES", level=4, pyname="max_nodes", leaf=True),
+    int(0x01047200): Xtag(name="PLT_FACETSET_LIST", level=3, pyname="facets"),
+    int(0x01047201): Xtag(name="PLT_FACET", level=4, pyname="facet", leaf=True),
     # Mesh/Edges
-    int(0x01048000): Xtag(name="PLT_EDGE_SECTION", pyname="edges"),
+    int(0x01048000): Xtag(name="PLT_EDGE_SECTION", level=1, pyname="edges"),
     # Mesh/Edges/Edge
-    int(0x01048100): Xtag(name="PLT_EDGE", pyname="edge"),
-    int(0x01048101): Xtag(name="PLT_EDGE_HDR", pyname="header"),
-    int(0x01048102): Xtag(name="PLT_EDGE_ID", pyname="id", leaf=True),
-    int(0x01048103): Xtag(name="PLT_EDGE_LINES", pyname="lines", leaf=True),
-    int(0x01048104): Xtag(name="PLT_EDGE_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01048105): Xtag(name="PLT_EDGE_MAX_NODES", pyname="max_nodes", leaf=True),
+    int(0x01048100): Xtag(name="PLT_EDGE", level=2, pyname="edge"),
+    int(0x01048101): Xtag(name="PLT_EDGE_HDR", level=3, pyname="header"),
+    int(0x01048102): Xtag(name="PLT_EDGE_ID", level=4, pyname="id", leaf=True),
+    int(0x01048103): Xtag(name="PLT_EDGE_LINES", level=4, pyname="lines", leaf=True),
+    int(0x01048104): Xtag(name="PLT_EDGE_NAME", level=4, pyname="name", leaf=True, format="szname"),
+    int(0x01048105): Xtag(name="PLT_EDGE_MAX_NODES", level=4, pyname="max_nodes", leaf=True),
     # Mesh/Edges/EdgeList
-    int(0x01048200): Xtag(name="PLT_EDGE_LIST", pyname="edges", leaf=True),
+    int(0x01048200): Xtag(name="PLT_EDGE_LIST", level=2, pyname="edges", leaf=True),
     # Mesh/Edges/EdgeList/Line
-    int(0x01048201): Xtag(name="PLT_LINE", pyname="line", leaf=True),
+    int(0x01048201): Xtag(name="PLT_LINE", level=3, pyname="line", leaf=True),
     # Mesh/Objects
-    int(0x01050000): Xtag(name="PLT_OBJECTS_SECTION", pyname="objects"),
+    int(0x01050000): Xtag(name="PLT_OBJECTS_SECTION", level=1, pyname="objects"),
     # Mesh/Objects/Object
-    int(0x01050001): Xtag(name="PLT_OBJECT_ID", pyname="id", leaf=True),
-    int(0x01050002): Xtag(name="PLT_OBJECT_NAME", pyname="name", leaf=True, format="szname"),
-    int(0x01050003): Xtag(name="PLT_OBJECT_TAG", pyname="tag", leaf=True),
-    int(0x01050004): Xtag(name="PLT_OBJECT_POS", pyname="pos", leaf=True, format="float32"),
-    int(0x01050005): Xtag(name="PLT_OBJECT_ROT", pyname="rot", leaf=True, format="float32"),
-    int(0x01050006): Xtag(name="PLT_OBJECT_DATA", pyname="data", leaf=True, format="float32"),
+    int(0x01050001): Xtag(name="PLT_OBJECT_ID", level=2, pyname="id", leaf=True),
+    int(0x01050002): Xtag(name="PLT_OBJECT_NAME", level=2, pyname="name", leaf=True, format="szname"),
+    int(0x01050003): Xtag(name="PLT_OBJECT_TAG", level=2, pyname="tag", leaf=True),
+    int(0x01050004): Xtag(name="PLT_OBJECT_POS", level=2, pyname="pos", leaf=True, format="float32"),
+    int(0x01050005): Xtag(name="PLT_OBJECT_ROT", level=2, pyname="rot", leaf=True, format="float32"),
+    int(0x01050006): Xtag(name="PLT_OBJECT_DATA", level=2, pyname="data", leaf=True, format="float32"),
     # Mesh/Objects/Object/Point
-    int(0x01051000): Xtag(name="PLT_POINT_OBJECT", pyname="point"),
-    int(0x01051001): Xtag(name="PLT_POINT_COORD", pyname="coord", leaf=True, format="float32"),
+    int(0x01051000): Xtag(name="PLT_POINT_OBJECT", level=3, pyname="point"),
+    int(0x01051001): Xtag(name="PLT_POINT_COORD", level=4, pyname="coord", leaf=True, format="float32"),
     # Mesh/Objects/Object/Line
-    int(0x01052000): Xtag(name="PLT_LINE_OBJECT", pyname="line"),
-    int(0x01052001): Xtag(name="PLT_LINE_COORDS", pyname="coords", leaf=True, format="float32"),
+    int(0x01052000): Xtag(name="PLT_LINE_OBJECT", level=3, pyname="line"),
+    int(0x01052001): Xtag(name="PLT_LINE_COORDS", level=4, pyname="coords", leaf=True, format="float32"),
     # State/
-    int(0x02000000): Xtag(name="PLT_STATE", pyname="state"),
+    int(0x02000000): Xtag(name="PLT_STATE", level=0, pyname="state"),
     # State/Header
-    int(0x02010000): Xtag(name="PLT_STATE_HEADER", pyname="header"),
-    int(0x02010001): Xtag(name="PLT_STATE_HDR_ID", pyname="id", leaf=True),
-    int(0x02010002): Xtag(name="PLT_STATE_HDR_TIME", pyname="time", leaf=True, format="float32"),
-    int(0x02010003): Xtag(name="PLT_STATE_STATUS", pyname="status", leaf=True),
+    int(0x02010000): Xtag(name="PLT_STATE_HEADER", level=1, pyname="header"),
+    int(0x02010001): Xtag(name="PLT_STATE_HDR_ID", level=2, pyname="id", leaf=True),
+    int(0x02010002): Xtag(name="PLT_STATE_HDR_TIME", level=2, pyname="time", leaf=True, format="float32"),
+    int(0x02010003): Xtag(name="PLT_STATE_STATUS", level=2, pyname="status", leaf=True),
     # State/Data
-    int(0x02020000): Xtag(name="PLT_STATE_DATA", pyname="state_data"),
-    int(0x02020001): Xtag(name="PLT_STATE_VARIABLE", pyname="variable"),
-    int(0x02020002): Xtag(name="PLT_STATE_VAR_ID", pyname="id", leaf=True),
-    int(0x02020003): Xtag(name="PLT_STATE_VAR_DATA", pyname="data", leaf=True, format="float32"),
-    int(0x02020100): Xtag(name="PLT_GLOBAL_DATA", pyname="data"),
-    int(0x02020300): Xtag(name="PLT_NODE_DATA", pyname="data"),
-    int(0x02020400): Xtag(name="PLT_ELEMENT_DATA", pyname="data"),
-    int(0x02020500): Xtag(name="PLT_FACE_DATA", pyname="data"),
-    int(0x02020600): Xtag(name="PLT_EDGE_DATA", pyname="data"),
+    int(0x02020000): Xtag(name="PLT_STATE_DATA", level=1, pyname="state_data"),
+    int(0x02020001): Xtag(name="PLT_STATE_VARIABLE", level=3, pyname="variable"),
+    int(0x02020002): Xtag(name="PLT_STATE_VAR_ID", level=4, pyname="id", leaf=True),
+    int(0x02020003): Xtag(name="PLT_STATE_VAR_DATA", level=4, pyname="data", leaf=True, format="float32"),
+    int(0x02020100): Xtag(name="PLT_GLOBAL_DATA", level=2, pyname="data"),
+    int(0x02020300): Xtag(name="PLT_NODE_DATA", level=2, pyname="data"),
+    int(0x02020400): Xtag(name="PLT_ELEMENT_DATA", level=2, pyname="data"),
+    int(0x02020500): Xtag(name="PLT_FACE_DATA", level=2, pyname="data"),
+    int(0x02020600): Xtag(name="PLT_EDGE_DATA", level=2, pyname="data"),
     # State/MeshState
-    int(0x02030000): Xtag(name="PLT_MESH_STATE", pyname="mesh_state"),
+    int(0x02030000): Xtag(name="PLT_MESH_STATE", level=1, pyname="mesh_state"),
     # State/MeshState/ElementState
-    int(0x02030001): Xtag(name="PLT_ELEMENT_STATE", pyname="element_state", leaf=True),
+    int(0x02030001): Xtag(name="PLT_ELEMENT_STATE", level=2, pyname="element_state", leaf=True),
     # State/ObjectsState
-    int(0x02040000): Xtag(name="PLT_OBJECTS_STATE", pyname="objects_state"),
+    int(0x02040000): Xtag(name="PLT_OBJECTS_STATE", level=1, pyname="objects_state"),
 }
 
 
@@ -253,115 +256,67 @@ class ElemType(Enum):
     PLT_ELEM_LINE3 = auto()  # new in 3.4
 
 
-# @dataclass
-# class DictItem:
-#     ntype: np.uint32
-#     nfmt: np.uint32
-#     szname: str
-#     szunit: str
-#     index: np.uint32
-#     array_size: np.uint32
-#     array_names: list[str]
+@dataclass
+class Surface:
+    name: str
+    id: int
+    nfaces: int
+    max_nodes: int
+    faces: list[list[int]]
 
 
-# @dataclass
-# class Dictionary:
-#     glb: list[DictItem]
-#     mat: list[DictItem]
-#     node: list[DictItem]
-#     elem: list[DictItem]
-#     face: list[DictItem]
-#     edge: list[DictItem]
+def assemble_surfaces(surface_section: dict):
+    surfaces = []
+    for surface in surface_section["data"]:
+        surface_dict = {}
+        for block in surface["data"]:
+            match block["name"]:
+                case "PLT_SURFACE_HDR":
+                    for header_item in block["data"]:
+                        surface_dict[header_item["pyname"]] = header_item["data"][0]
+                case "PLT_FACE_LIST":
+                    surface_dict["faces"] = []
+                    for face_list_item in block["data"]:
+                        surface_dict["faces"].append(list(face_list_item["data"]))
+                case _:
+                    continue
+
+        surfaces.append(Surface(**surface_dict))
+    return surfaces
 
 
-# @dataclass
-# class Material:
-#     nid: np.int32
-#     szname: str
+@dataclass
+class Domain:
+    id: int
+    name: str
+    etype: int
+    nelems: int
+    elements: list[list[int]]
 
 
-# @dataclass
-# class Node:
-#     id: np.int32
-#     x: tuple[float, float, float]
+def assemble_domains(domain_section: dict):
+    domains = []
+    for domain in domain_section["data"]:
+        domain_dict = {}
+        for domain_item in domain["data"]:
+            match domain_item["name"]:
+                case "PLT_DOMAIN_HDR":
+                    for header_item in domain_item["data"]:
+                        domain_dict[header_item["pyname"]] = header_item["data"][0]
+                case "PLT_DOM_ELEM_LIST":
+                    domain_dict["elements"] = []
+                    for elem_list_item in domain_item["data"]:
+                        domain_dict["elements"].append(list(elem_list_item["data"]))
+        domains.append(Domain(**domain_dict))
+    return domains
 
 
-# @dataclass
-# class Elem:
-#     eid: np.int32
-#     index: np.int32
-#     node: list[np.int32]
-
-
-# @dataclass
-# class Face:
-#     nid: np.int32
-#     nn: np.int32
-#     node: list[np.int32]
-
-
-# @dataclass
-# class Line:
-#     id: np.int32
-#     nn: np.int32
-#     node: list[np.int32]
-
-
-# @dataclass
-# class Domain:
-#     etype: np.int32
-#     mid: np.int32
-#     ne: np.int32
-#     nid: np.int32
-#     szname: str
-#     elist: list[np.int32]
-#     elem: list[Elem]
-
-
-# @dataclass
-# class Surface:
-#     sid: np.int32
-#     nfaces: np.int32
-#     max_nodes: np.int32
-#     face: list[Face]
-#     szname: str
-
-
-# @dataclass
-# class Edge:
-#     eid: np.int32
-#     nlines: np.int32
-#     max_nodes: np.int32
-#     line: list[Line]
-#     szname: str
-
-
-# @dataclass
-# class NodeSet:
-#     nid: np.int32
-#     nn: np.int32
-#     szname: str
-#     node: list[np.int32]
-
-
-# @dataclass
-# class ElemSet:
-#     nid: np.int32
-#     ne: np.int32
-#     szname: str
-#     elem: list[np.int32]
-
-
-# @dataclass
-# class XMesh:
-#     mat: list[Material]
-#     node: list[Node]
-#     dom: list[Domain]
-#     surf: list[Surface]
-#     edge: list[Edge]
-#     node_set: list[NodeSet]
-#     elem_set: list[ElemSet]
-#     facet_set: list[Surface]
+@dataclass
+class Nodes:
+    dimension: int
+    nnodes: int
+    ids: list[int]
+    coords: list[list[float]]
 
 
 def check_file_is_febio(buffer):
@@ -375,14 +330,278 @@ def check_file_is_febio(buffer):
         log.info("File is FEBio, and in Little Endian format")
 
 
-def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
+def _unwrap_string(data: np.ndarray):
+    if data.size == DI_NAME_SIZE:
+        data = data.tobytes()
+        str_end = data.find(b"\x00")
+        data = data[0:str_end].decode("utf-8")
+    elif data.size > 0:
+        data = data.tobytes()
+        str_start = data.rfind(b"\x00")
+        data = data[str_start + 1 :].decode("utf-8")
+    else:
+        data = ""
+    return data
+
+
+def parse_prefix(buffer: bytes) -> tuple[np.int32, np.int32]:
+    tag = np.frombuffer(buffer[0:4], dtype=_DTYPES["int32"])[0]
+    offset = np.frombuffer(buffer[4:8], dtype=_DTYPES["int32"])[0]
+    return tag, offset
+
+
+@dataclass
+class DicItem:
+    name: str
+    itype: int
+    iformat: int
+    array_size: int
+    units: str | None = None
+
+
+def _parse_dic_item(buffer: bytes):
+    i = 0
+    item_dict = {}
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        data = np.frombuffer(buffer[i + 8 : i + 8 + offset], dtype=_DTYPES[TAG_LUT[tag].format])
+        if data.size == 1:
+            data = data[0]
+        if TAG_LUT[tag].format == "szname":
+            data = _unwrap_string(data)
+        item_dict[TAG_LUT[tag].pyname] = data
+        i += 8 + offset
+    return DicItem(**item_dict)
+
+
+def parse_dictionary(buffer: bytes) -> dict[str, list[DicItem]]:
+    i = 0
+    section_keys = ("PLT_DIC_GLOBAL", "PLT_DIC_NODAL", "PLT_DIC_DOMAIN", "PLT_DIC_SURFACE", "PLT_DIC_EDGE")
+    xdictionary = {key: [] for key in section_keys}
+    current_key = None
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        if TAG_LUT[tag].name == "PLT_DIC_ITEM":
+            item = _parse_dic_item(buffer[i + 8 : i + 8 + offset])
+            i += 8 + offset
+            if current_key is None:
+                raise ValueError("Unexpected PLT_DIC_ITEM without a preceding key")
+            xdictionary[current_key].append(item)
+        elif TAG_LUT[tag].name in section_keys:
+            current_key = TAG_LUT[tag].name
+            i += 8
+        else:
+            i += 8
+    return xdictionary
+
+
+def parse_header(buffer: bytes, f):
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        f["/"].attrs[TAG_LUT[tag].name] = np.frombuffer(buffer[i + 8 : i + 8 + offset], dtype=_DTYPES[TAG_LUT[tag].format])
+        i += 8 + offset
+
+
+def assemble_nodes(node_section: dict):
+    node_dict = {}
+    for node_item in node_section["data"]:
+        match node_item["name"]:
+            case "PLT_NODE_HEADER":
+                for header_item in node_item["data"]:
+                    node_dict[header_item["pyname"]] = header_item["data"][0]
+            case "PLT_NODE_COORDS":
+                node_dict["ids"] = [node[0] for node in node_item["data"]]
+                node_dict["coords"] = [node.tolist()[1:] for node in node_item["data"]]
+    return Nodes(**node_dict)
+
+
+def _parse_node_header(buffer: bytes):
+    i = 0
+    header_dict = {}
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        header_dict[TAG_LUT[tag].pyname] = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
+        i += 8 + offset
+    return header_dict
+
+
+def _parse_node_section(buffer: bytes):
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        match TAG_LUT[tag].name:
+            case "PLT_NODE_HEADER":
+                node_dict = _parse_node_header(buffer[i + 8 : i + 8 + offset])
+            case "PLT_NODE_COORDS":
+                nodes = np.frombuffer(buffer[i + 8 : i + 8 + offset], dtype=_DTYPES["node"])
+                node_dict["data"] = nodes
+        i += 8 + offset
+    return node_dict
+
+
+def _parse_domain_header(buffer: bytes):
+    i = 0
+    header_dict = {}
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        data = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
+        if TAG_LUT[tag].format == "szname":
+            data = _unwrap_string(data)
+        header_dict[TAG_LUT[tag].pyname] = data
+        i += 8 + offset
+    return header_dict
+
+
+def _parse_domain_elements(buffer: bytes):
+    elements = []
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        elements.append(np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format]).reshape([1, -1]))
+        i += 8 + offset
+    elements = np.concatenate(elements, axis=0)
+    return elements
+
+
+def _parse_domain(buffer: bytes):
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        match TAG_LUT[tag].name:
+            case "PLT_DOMAIN_HDR":
+                domain_dict = _parse_domain_header(child)
+            case "PLT_DOM_ELEM_LIST":
+                domain_dict["elements"] = _parse_domain_elements(child)
+        i += 8 + offset
+    return domain_dict
+
+
+def _parse_domain_section(buffer: bytes):
+    i = 0
+    domains = []
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        if TAG_LUT[tag].name == "PLT_DOMAIN":
+            domain_dict = _parse_domain(child)
+            domains.append(domain_dict)
+        i += 8 + offset
+    return domains
+
+
+def _parse_surface_header(buffer: bytes):
+    i = 0
+    header_dict = {}
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        data = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
+        if TAG_LUT[tag].format == "szname":
+            data = _unwrap_string(data)
+        header_dict[TAG_LUT[tag].pyname] = data
+        i += 8 + offset
+    return header_dict
+
+
+def _parse_surface_faces(buffer: bytes):
+    i = 0
+    faces = []
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        faces.append(np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format]))
+        i += 8 + offset
+    return faces
+
+
+def _parse_surface(buffer: bytes):
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        match TAG_LUT[tag].name:
+            case "PLT_SURFACE_HDR":
+                surface_dict = _parse_surface_header(child)
+            case "PLT_FACE_LIST":
+                assert surface_dict
+                surface_dict["faces"] = _parse_surface_faces(child)
+        i += 8 + offset
+    return surface_dict
+
+
+def _parse_surface_section(buffer: bytes):
+    i = 0
+    surfaces = []
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        if TAG_LUT[tag].name == "PLT_SURFACE":
+            surface_dict = _parse_surface(child)
+            surfaces.append(surface_dict)
+        i += 8 + offset
+    return surfaces
+
+
+def parse_mesh(buffer: bytes, mesh_cnt: int, f):
+    i = 0
+    while i < len(buffer) - 8:
+        tag, offset = parse_prefix(buffer[i : i + 8])
+        child = buffer[i + 8 : i + 8 + offset]
+        match TAG_LUT[tag].name:
+            case "PLT_NODE_SECTION":
+                nodes = _parse_node_section(child)
+                dset_path = f"/meshes/{mesh_cnt}/nodes"
+                f.create_dataset(dset_path, data=nodes["data"], dtype=_DTYPES["node"])
+                i += 8 + offset
+            case "PLT_DOMAIN_SECTION":
+                domains = _parse_domain_section(child)
+                for domain in domains:
+                    dset_path = f"/meshes/{mesh_cnt}/domains/{domain['id'][0]}"
+                    f.create_dataset(dset_path, data=domain["elements"], dtype=_DTYPES["int32"])
+                    for key, value in domain.items():
+                        if not key == "elements":
+                            f[dset_path].attrs[key] = value
+                i += 8 + offset
+            case "PLT_SURFACE_SECTION":
+                surfaces = _parse_surface_section(child)
+                for surface in surfaces:
+                    dset_path = f"/meshes/{mesh_cnt}/surfaces/{surface['id'][0]}"
+                    f.create_dataset(dset_path, data=surface["faces"], dtype=_DTYPES["int32"])
+                    for key, value in surface.items():
+                        if not key == "surfaces":
+                            f[dset_path].attrs[key] = value
+                i += 8 + offset
+            case _:
+                i += 8 + offset
+    return nodes
+
+
+def parse_blocks(buffer, f, data_offset=0, max_depth=MAX_DEPTH):
     i = 0
     blocks = []
+    xdictionary = None
+    mesh_cnt = 0
     while i < (len(buffer) - 8):
-        tag = np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1, offset=i)[0]
-        count = np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1, offset=i + 4)[0]
+        tag, count = parse_prefix(buffer[i : i + 8])
+        # tag = np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1, offset=i)[0]
+        # count = np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1, offset=i + 4)[0]
         child = buffer[i + 8 : i + 8 + count]
         block = {"tag": f"{tag:#010x}", "name": TAG_LUT[tag].name, "pyname": TAG_LUT[tag].pyname, "size": count}
+        match TAG_LUT[tag].name:
+            case "PLT_HEADER":
+                parse_header(child, f)
+            case "PLT_DICTIONARY":
+                xdictionary = parse_dictionary(child)
+            case "PLT_MESH":
+                parse_mesh(child, mesh_cnt, f)
+                mesh_cnt += 1
+            case "PLT_STATE":
+                print(block)
         try:
             TAG_LUT[tag]
         except KeyError:
@@ -426,88 +645,10 @@ def parse_blocks(buffer, data_offset=0, max_depth=MAX_DEPTH):
                     block["data"] = [""]
         else:
             if max_depth > 1:
-                block["data"] = parse_blocks(child, data_offset=data_offset + i + 8, max_depth=max_depth - 1)
+                block["data"] = parse_blocks(child, f, data_offset=data_offset + i + 8, max_depth=max_depth - 1)
         blocks.append(block)
         i += 8 + count
     return blocks
-
-
-@dataclass
-class Surface:
-    name: str
-    id: int
-    nfaces: int
-    max_nodes: int
-    faces: list[list[int]]
-
-
-# SURFACE_HDR_LUT = {
-#     "PLT_SURFACE_ID": "id",
-#     "PLT_SURFACE_NAME": "name",
-#     "PLT_SURFACE_FACES": "nfaces",
-#     "PLT_SURFACE_MAX_FACET_NODES": "max_facet_nodes",
-#     "PLT_SURFACE_FACET_NODES": "faces",
-# }
-
-
-def assemble_surfaces(surface_section: dict):
-    surfaces = []
-    for surface in surface_section["data"]:
-        surface_dict = {}
-        for block in surface["data"]:
-            match block["name"]:
-                case "PLT_SURFACE_HDR":
-                    for header_item in block["data"]:
-                        surface_dict[header_item["pyname"]] = header_item["data"][0]
-                case "PLT_FACE_LIST":
-                    surface_dict["faces"] = []
-                    for face_list_item in block["data"]:
-                        surface_dict["faces"].append(list(face_list_item["data"]))
-                case _:
-                    continue
-
-        surfaces.append(Surface(**surface_dict))
-    return surfaces
-
-
-@dataclass
-class Domain:
-    id: int
-    name: str
-    etype: int
-    nelems: int
-    elements: list[list[int]]
-
-
-# DOMAIN_HDR_LUT = {"PLT_DOM_ELEM_TYPE": "etype", "PLT_DOM_NAME": "name", "PLT_DOM_PART_ID": "id", "PLT_DOM_ELEMS": "nelem"}
-
-
-def assemble_domains(domain_section: dict):
-    domains = []
-    for domain in domain_section["data"]:
-        domain_dict = {}
-        for domain_item in domain["data"]:
-            match domain_item["name"]:
-                case "PLT_DOMAIN_HDR":
-                    for header_item in domain_item["data"]:
-                        domain_dict[header_item["pyname"]] = header_item["data"][0]
-                case "PLT_DOM_ELEM_LIST":
-                    domain_dict["elements"] = []
-                    for elem_list_item in domain_item["data"]:
-                        domain_dict["elements"].append(list(elem_list_item["data"]))
-        domains.append(Domain(**domain_dict))
-    return domains
-
-
-@dataclass
-class Nodes:
-    dimension: int
-    nnodes: int
-    ids: list[int]
-    coords: list[list[float]]
-
-
-# NODE_HDR_LUT = {"PLT_NODE_DIM": "dimension", "PLT_NODE_SIZE": "nnodes"}
 
 
 @dataclass
@@ -528,19 +669,6 @@ class Header:
 # }
 
 
-def assemble_nodes(node_section: dict):
-    node_dict = {}
-    for node_item in node_section["data"]:
-        match node_item["name"]:
-            case "PLT_NODE_HEADER":
-                for header_item in node_item["data"]:
-                    node_dict[header_item["pyname"]] = header_item["data"][0]
-            case "PLT_NODE_COORDS":
-                node_dict["ids"] = [node[0] for node in node_item["data"]]
-                node_dict["coords"] = [node.tolist()[1:] for node in node_item["data"]]
-    return Nodes(**node_dict)
-
-
 @dataclass
 class Mesh:
     nodes: Nodes | None = None
@@ -549,16 +677,59 @@ class Mesh:
 
 
 @dataclass
+class ElementData:
+    id: int
+    domain_ids: list[int]
+    data: list[list[float]]
+
+
+@dataclass
+class NodeData:
+    id: int
+    data: list[float]
+
+
+@dataclass
+class State:
+    time: float
+    status: int
+    element_data: list[ElementData]
+    node_data: list[NodeData]
+
+
+@dataclass
 class XpltData:
     header: Header
     meshes: list[Mesh] = Field(default_factory=list)
+
+
+def assemble_element_data(element_data: dict):
+    element_data_dict = {}
+    for block in element_data["data"]:
+        match block["name"]:
+            case "PLT_STATE_VARIABLE":
+                element_data_dict[block["data"][0]["pyname"]] = block["data"][0]["data"][0]
+                var_data = block["data"][1]["data"]
+                domain_data = []
+                domain_ids = []
+                for key, value in var_data.items():
+                    domain_data.append(pa.array(value, type=pa.float32()))
+                    domain_ids.append(pa.array([key] * len(domain_data[-1]), type=pa.int32()))
+                domain_data = pa.concat_arrays(domain_data)
+                domain_ids = pa.concat_arrays(domain_ids)
+                element_data = pa.table([domain_ids, domain_data], names=["DomainID", "Data"])
+                element_data_dict["data"] = element_data
+
+    return element_data_dict
 
 
 def parse_xplt(filename: str):
     with open(filename, "rb") as fid:
         buffer = fid.read()
         check_file_is_febio(buffer)
-        blocks = parse_blocks(buffer[4:])
+        f = h5py.File("test.hdf5", "w")
+        blocks = parse_blocks(buffer[4:], f)
+        f.close()
         data = {}
         for block in blocks:
             match block["name"]:
@@ -596,6 +767,20 @@ def parse_xplt(filename: str):
                         data["meshes"] = [Mesh(nodes=nodes, domains=domains, surfaces=surfaces)]
 
                 case "PLT_STATE":
+                    state_dict = {"element_data": []}
+                    for block2 in block["data"]:
+                        match block2["name"]:
+                            case "PLT_STATE_HEADER":
+                                for header_item in block2["data"]:
+                                    state_dict[header_item["pyname"]] = header_item["data"][0]
+                            case "PLT_STATE_DATA":
+                                for data_item in block2["data"]:
+                                    match data_item["name"]:
+                                        case "PLT_ELEMENT_DATA":
+                                            element_data = assemble_element_data(data_item)
+                            case _:
+                                continue
+
                     pass
         data_model = XpltData(**data)
         log.info(TypeAdapter(XpltData).dump_json(data_model, indent=4).decode("utf-8"))
