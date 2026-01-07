@@ -156,6 +156,14 @@ pyfebio.step module
    :show-inheritance:
    :undoc-members:
 
+pyfebio.xplt module
+-----------------------
+
+.. automodule:: pyfebio.xplt
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 

@@ -1,11 +1,15 @@
 r"""
 This module converts XPLT files to HDF5. It can be run from the command line with:
 
+..code-block:: bash
+
     python -m pyfebio.xplt [path/to/xplt_file] Optional[path/to/hdf5_output]
 
 If the output path is not provided it will be set to [path/to/xplt_file] with the extension changed to .hdf5
 
 To use in a script:
+
+..code-block:: python
 
     from pyfebio import xplt
 
@@ -55,7 +59,7 @@ _DTYPES_SIZE = {
 }
 
 
-def dtypes_to_little__ENDIAN(_DTYPES):
+def dtypes_to_little_endian(_DTYPES):
     """
     Uncommon these days, but if your XPLT file was created on a big-_ENDIAN machine,
     this will do a byte swap to little-_ENDIAN for all _DTYPES
@@ -74,56 +78,6 @@ class Xtag:
 
 
 FEBIO_TAG = int(0x00464542)
-
-
-def parse_char_array(buffer: bytes) -> str:
-    data = np.frombuffer(buffer, dtype="S1")
-    data = data.tobytes()
-    if len(buffer) == DI_NAME_SIZE:
-        str_end = data.find(b"\x00")
-        data = data[0:str_end].decode("utf-8")
-    else:
-        str_start = data.rfind(b"\x00")
-        data = data[str_start + 1 :].decode("utf-8")
-    return data
-
-
-def parse_uint32(buffer: bytes) -> np.ndarray:
-    data = np.frombuffer(buffer, dtype=_ENDIAN + "u32")
-    if data.size == 1:
-        return data.item()
-    return data
-
-
-def parse_float32(buffer: bytes) -> np.ndarray:
-    data = np.frombuffer(buffer, dtype=_ENDIAN + "f32")
-    if data.size == 1:
-        return data.item()
-    return data
-
-
-def parse_node3(buffer: bytes) -> np.ndarray:
-    return np.frombuffer(
-        buffer,
-        dtype=[
-            ("id", _ENDIAN + "u32"),
-            ("x", _ENDIAN + "f32"),
-            ("y", _ENDIAN + "f32"),
-            ("z", _ENDIAN + "f32"),
-        ],
-    )
-
-
-def parse_node2(buffer: bytes) -> np.ndarray:
-    return np.frombuffer(
-        buffer,
-        dtype=[
-            ("id", _ENDIAN + "u32"),
-            ("x", _ENDIAN + "f32"),
-            ("y", _ENDIAN + "f32"),
-        ],
-    )
-
 
 TAG_LUT = {
     # Root/
@@ -395,108 +349,6 @@ VAR_SHAPE_LUT = {0: (-1, 1), 1: (-1, 3), 2: (-1, 6), 3: (-1, 3), 4: (-1, 21), 5:
 # 6: ARRAY
 # 7: ARRAY_VEC3F
 
-
-class VarFormat(Enum):
-    """
-    Var_Fmt from xpltReader3.h:182
-    """
-
-    FMT_NODE = auto()
-    FMT_ITEM = auto()
-    FMT_MULT = auto()
-    FMT_REGION = auto()
-
-
-class ElemType(Enum):
-    """
-    Elem_Type from xpltReader3.h:185
-    """
-
-    PLT_ELEM_HEX8 = auto()
-    PLT_ELEM_PENTA = auto()
-    PLT_ELEM_TET4 = auto()
-    PLT_ELEM_QUAD = auto()
-    PLT_ELEM_TRI = auto()
-    PLT_ELEM_TRUSS = auto()
-    PLT_ELEM_HEX20 = auto()
-    PLT_ELEM_TET10 = auto()
-    PLT_ELEM_TET15 = auto()
-    PLT_ELEM_HEX27 = auto()
-    PLT_ELEM_TRI6 = auto()
-    PLT_ELEM_QUAD8 = auto()
-    PLT_ELEM_QUAD9 = auto()
-    PLT_ELEM_PENTA15 = auto()
-    PLT_ELEM_TET20 = auto()
-    PLT_ELEM_TRI10 = auto()
-    PLT_ELEM_PYRA5 = auto()
-    PLT_ELEM_TET5 = auto()
-    PLT_ELEM_PYRA13 = auto()
-    PLT_ELEM_LINE3 = auto()  # new in 3.4
-
-
-@dataclass
-class Surface:
-    name: str
-    id: int
-    nfaces: int
-    max_nodes: int
-    faces: list[list[int]]
-
-
-def assemble_surfaces(surface_section: dict):
-    surfaces = []
-    for surface in surface_section["data"]:
-        surface_dict = {}
-        for block in surface["data"]:
-            match block["name"]:
-                case "PLT_SURFACE_HDR":
-                    for header_item in block["data"]:
-                        surface_dict[header_item["pyname"]] = header_item["data"][0]
-                case "PLT_FACE_LIST":
-                    surface_dict["faces"] = []
-                    for face_list_item in block["data"]:
-                        surface_dict["faces"].append(list(face_list_item["data"]))
-                case _:
-                    continue
-
-        surfaces.append(Surface(**surface_dict))
-    return surfaces
-
-
-@dataclass
-class Domain:
-    id: int
-    name: str
-    etype: int
-    nelems: int
-    elements: list[list[int]]
-
-
-def assemble_domains(domain_section: dict):
-    domains = []
-    for domain in domain_section["data"]:
-        domain_dict = {}
-        for domain_item in domain["data"]:
-            match domain_item["name"]:
-                case "PLT_DOMAIN_HDR":
-                    for header_item in domain_item["data"]:
-                        domain_dict[header_item["pyname"]] = header_item["data"][0]
-                case "PLT_DOM_ELEM_LIST":
-                    domain_dict["elements"] = []
-                    for elem_list_item in domain_item["data"]:
-                        domain_dict["elements"].append(list(elem_list_item["data"]))
-        domains.append(Domain(**domain_dict))
-    return domains
-
-
-@dataclass
-class Nodes:
-    dimension: int
-    nnodes: int
-    ids: list[int]
-    coords: list[list[float]]
-
-
 def check_file_is_febio(buffer):
     if not np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] == int(FEBIO_TAG):
         dtypes_to_little__ENDIAN(_DTYPES)
@@ -577,10 +429,6 @@ def parse_dictionary(buffer: bytes) -> dict[str, list[DicItem]]:
         else:
             i += 8
     return xdictionary
-
-
-def parse_root(buffer: bytes, f):
-    pass
 
 
 def parse_root_header(buffer: bytes, f):

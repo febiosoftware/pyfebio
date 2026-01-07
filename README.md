@@ -2,8 +2,7 @@
 
 ## Overview
 
-This is a Python package for generating FEBio input files. We rely heavily on pydantic and pydantic-xml
-for type validation and XML serialization. Many of FEBio's features are covered, but not all.
+This is a Python package for generating FEBio input files and converting XPLT files to HDF5. We rely heavily on pydantic and pydantic-xml for type validation and XML serialization. Many of FEBio's features are covered, but not all.
 
 ## Getting Started
 
@@ -327,3 +326,5 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Element Variables
   - ☑️ Rigid Body Variables
   - ☑️ Rigid Connector Variables
+- XPLT
+  - ✅ Convert XPLT to HDF5
