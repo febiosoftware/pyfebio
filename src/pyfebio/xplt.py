@@ -8,6 +8,7 @@ as:
 
 import logging
 from enum import Enum, auto
+from pathlib import Path
 from typing import Any, Literal
 
 import h5py
@@ -368,20 +369,17 @@ TAG_LUT = {
     int(0x02040000): Xtag(name="PLT_OBJECTS_STATE", pyname="objects_state"),
 }
 
+VAR_SHAPE_LUT = {0: (-1, 1), 1: (-1, 3), 2: (-1, 6), 3: (-1, 3), 4: (-1, 21), 5: (-1, 9), 6: (-1, 1), 7: (-1, 3)}
 
-class VarType(Enum):
-    """
-    Var_Type from xpltReader3.h:179
-    """
-
-    FLOAT = auto()
-    VEC3F = auto()
-    MAT3FS = auto()
-    MAT3FD = auto()
-    TENS4FS = auto()
-    MAT3F = auto()
-    ARRAY = auto()
-    ARRAY_VEC3F = auto()
+# Var_Type from xpltReader3.h:179
+# 0: FLOAT
+# 1: VEC3F
+# 2: MAT3FS
+# 3: MAT3FD
+# 4: TENS4FS
+# 5: MAT3F
+# 6: ARRAY
+# 7: ARRAY_VEC3F
 
 
 class VarFormat(Enum):
@@ -648,20 +646,6 @@ def _parse_domain_section(buffer: bytes) -> list[dict[str, Any]]:
     return domains
 
 
-def _parse_surface_header(buffer: bytes) -> dict[str, Any]:
-    i = 0
-    header_dict = {}
-    while i < len(buffer) - 8:
-        tag, offset = parse_prefix(buffer[i : i + 8])
-        child = buffer[i + 8 : i + 8 + offset]
-        data = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
-        if TAG_LUT[tag].format == "szname":
-            data = _unwrap_string(data)
-        header_dict[TAG_LUT[tag].pyname] = data
-        i += 8 + offset
-    return header_dict
-
-
 def _parse_surface_faces(buffer: bytes) -> list[np.ndarray]:
     i = 0
     faces = []
@@ -681,7 +665,7 @@ def _parse_surface(buffer: bytes) -> dict[str, Any]:
         child = buffer[i + 8 : i + 8 + offset]
         match TAG_LUT[tag].name:
             case "PLT_SURFACE_HDR":
-                surface_dict = _parse_surface_header(child)
+                surface_dict = _parse_header(child)
             case "PLT_FACE_LIST":
                 surface_dict["faces"] = _parse_surface_faces(child)
         i += 8 + offset
@@ -709,7 +693,7 @@ def _parse_nodeset(buffer: bytes):
         child = buffer[i + 8 : i + 8 + offset]
         match TAG_LUT[tag].name:
             case "PLT_NODESET_HDR":
-                nodeset_dict = _parse_surface_header(child)
+                nodeset_dict = _parse_header(child)
             case "PLT_NODESET_LIST":
                 nodeset_dict["nodes"] = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
         i += 8 + offset
@@ -737,7 +721,7 @@ def _parse_elementset(buffer: bytes):
         child = buffer[i + 8 : i + 8 + offset]
         match TAG_LUT[tag].name:
             case "PLT_ELEMENTSET_HDR":
-                elementset_dict = _parse_surface_header(child)
+                elementset_dict = _parse_header(child)
             case "PLT_ELEMENTSET_LIST":
                 elementset_dict["elements"] = np.frombuffer(child, dtype=_DTYPES[TAG_LUT[tag].format])
         i += 8 + offset
@@ -954,16 +938,22 @@ def _parse_state_data(buffer: bytes):
 
 def parse_state(buffer: bytes, state_cnt: int, xdictionary: dict, mesh_dict: dict, f):
     var_lut = {"node_data": "PLT_DIC_NODAL", "surface_data": "PLT_DIC_SURFACE", "element_data": "PLT_DIC_DOMAIN"}
-    set_lut: dict[str, str] = {"node_data": "node_sets", "surface_data": "surfaces", "element_data": "domains"}
+    set_lut = {"node_data": "node_sets", "surface_data": "surfaces", "element_data": "domains"}
     i = 0
     while i < len(buffer) - 8:
         tag, offset = parse_prefix(buffer[i : i + 8])
         child = buffer[i + 8 : i + 8 + offset]
         match TAG_LUT[tag].name:
             case "PLT_STATE_HEADER":
-                _parse_header(child)
+                header = _parse_header(child)
+                f.create_group(f"states/{state_cnt}")
+                for key, value in header.items():
+                    f[f"states/{state_cnt}"].attrs[key] = value
+
             case "PLT_MESH_STATE":
-                _parse_mesh_state(child)
+                mesh = _parse_mesh_state(child)
+                for key, value in mesh.items():
+                    f.create_dataset(f"states/{state_cnt}/mesh/{key}", data=value)
             case "PLT_OBJECTS_STATE":
                 _parse_objects_state(child)
             case "PLT_STATE_DATA":
@@ -972,12 +962,16 @@ def parse_state(buffer: bytes, state_cnt: int, xdictionary: dict, mesh_dict: dic
                     for item in data_items:
                         for set_id, data in item["data"].items():
                             var_name = xdictionary[var_lut[key]][item["id"][0] - 1].name
+                            itype = xdictionary[var_lut[key]][item["id"][0] - 1].itype
                             if key == "node_data":
                                 set_name = mesh_dict[set_lut[key]][set_id + 1]
                             else:
                                 set_name = mesh_dict[set_lut[key]][set_id]
+                            data_shape = VAR_SHAPE_LUT[itype]
+                            # if var_name == "stress error":
+                            #     data_shape = (-1, 1)
                             dset_path = f"states/{state_cnt}/{key}/{var_name}/{set_name}"
-                            f.create_dataset(dset_path, data=data)
+                            f.create_dataset(dset_path, data=data.reshape(data_shape))
             case _:
                 pass
         i += offset + 8
@@ -1055,11 +1049,14 @@ class XpltData:
     meshes: list[Mesh] = Field(default_factory=list)
 
 
-def parse_xplt(filename: str):
-    with open(filename, "rb") as fid:
+def to_hdf5(inputfile: str | Path, outputfile: str | Path | None = None):
+    inputfile = Path(inputfile)
+    if outputfile is None:
+        outputfile = inputfile.parent.joinpath(inputfile.stem + ".hdf5")
+    with open(Path(inputfile), "rb") as fid:
         buffer = fid.read()
         check_file_is_febio(buffer)
-        f = h5py.File("test.hdf5", "w")
+        f = h5py.File(outputfile, "w")
         blocks = parse_blocks(buffer[4:], f)
         f.close()
 
