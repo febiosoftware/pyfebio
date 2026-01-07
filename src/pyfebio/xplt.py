@@ -1,4 +1,19 @@
 r"""
+This module converts XPLT files to HDF5. It can be run from the command line with:
+
+    python -m pyfebio.xplt [path/to/xplt_file] Optional[path/to/hdf5_output]
+
+If the output path is not provided it will be set to [path/to/xplt_file] with the extension changed to .hdf5
+
+To use in a script:
+
+    from pyfebio import xplt
+
+    xplt.to_hdf5("/path/to/xplt_file", "/path/to/hdf5_output")
+
+Note that the xplt module is not imported by default with the pyfebio package,
+but must be imported explicitly as above.
+
 We reference:
     https://github.com/febiosoftware/FEBioStudio/blob/master/XPLTLib/xpltReader3.h
     commit: 7c7f171
@@ -13,7 +28,6 @@ from typing import Any, Literal
 
 import h5py
 import numpy as np
-from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 log = logging.getLogger(__name__)
@@ -855,7 +869,6 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                 objects = parse_objects_section(child)
                 i += 8 + offset
             case _:
-                print(TAG_LUT[tag].name)
                 i += 8 + offset
     return mesh_dict
 
@@ -881,9 +894,6 @@ def _parse_objects_state(buffer: bytes):
                 objects_dict["points"].append(_parse_object(buffer[i + 8 : i + 8 + offset]))
             case "PLT_LINE_OBJECT":
                 objects_dict["lines"].append(_parse_object(buffer[i + 8 : i + 8 + offset]))
-            case _:
-                print(TAG_LUT[tag].name)
-                pass
         i += 8 + offset
     return objects_dict
 
@@ -930,8 +940,6 @@ def _parse_state_data(buffer: bytes):
                 state_data_dict["object_data"] = _parse_data(buffer[i + 8 : i + 8 + offset])
             case "PLT_FACE_DATA":
                 state_data_dict["surface_data"] = _parse_data(buffer[i + 8 : i + 8 + offset])
-            case _:
-                pass
         i += 8 + offset
     return state_data_dict
 
@@ -968,12 +976,8 @@ def parse_state(buffer: bytes, state_cnt: int, xdictionary: dict, mesh_dict: dic
                             else:
                                 set_name = mesh_dict[set_lut[key]][set_id]
                             data_shape = VAR_SHAPE_LUT[itype]
-                            # if var_name == "stress error":
-                            #     data_shape = (-1, 1)
                             dset_path = f"states/{state_cnt}/{key}/{var_name}/{set_name}"
                             f.create_dataset(dset_path, data=data.reshape(data_shape))
-            case _:
-                pass
         i += offset + 8
 
 
@@ -1006,49 +1010,6 @@ def parse_blocks(buffer: bytes, f: h5py.File):
         i += 8 + offset
 
 
-@dataclass
-class Header:
-    version: int
-    compression: int
-    software: int
-    author: str | None = None
-    units: str | None = None
-
-
-@dataclass
-class Mesh:
-    nodes: Nodes | None = None
-    domains: list[Domain] | None = None
-    surfaces: list[Surface] | None = None
-
-
-@dataclass
-class ElementData:
-    id: int
-    domain_ids: list[int]
-    data: list[list[float]]
-
-
-@dataclass
-class NodeData:
-    id: int
-    data: list[float]
-
-
-@dataclass
-class State:
-    time: float
-    status: int
-    element_data: list[ElementData]
-    node_data: list[NodeData]
-
-
-@dataclass
-class XpltData:
-    header: Header
-    meshes: list[Mesh] = Field(default_factory=list)
-
-
 def to_hdf5(inputfile: str | Path, outputfile: str | Path | None = None):
     inputfile = Path(inputfile)
     if outputfile is None:
@@ -1057,150 +1018,15 @@ def to_hdf5(inputfile: str | Path, outputfile: str | Path | None = None):
         buffer = fid.read()
         check_file_is_febio(buffer)
         f = h5py.File(outputfile, "w")
-        blocks = parse_blocks(buffer[4:], f)
+        parse_blocks(buffer[4:], f)
         f.close()
 
-    # TAG_LUT = {
-    #     # Root/
-    #     # Root/Header
-    #     int(0x01000000): Xtag(name="ROOT", pyname="root", parse_fn=parse_root),
-    #     int(0x1010000): Xtag(name="HEADER", pyname="header", parse_fn=parse_root_header),
-    #     int(0x01010001): Xtag(
-    #         name="HDR_VERSION",
-    #         pyname="version",
-    #         parse_fn=parse_uint32,
-    #     ),
-    #     int(0x01010004): Xtag(name="HDR_COMPRESSION", pyname="compression", parse_fn=parse_uint32),
-    #     int(0x01010005): Xtag(name="HDR_AUTHOR", pyname="author", parse_fn=parse_char_array),
-    #     int(0x01010006): Xtag(name="HDR_SOFTWARE", pyname="software", parse_fn=parse_uint32),
-    #     int(0x01010007): Xtag(name="HDR_UNITS", pyname="units", parse_fn=parse_char_array),
-    #     # Root/Dictionary
-    #     int(0x01020000): Xtag(name="DICTIONARY", pyname="dictionary", parse_fn=parse_dictionary),
-    #     int(0x01021000): Xtag(name="DIC_GLOBAL", pyname="dic_global", parse_fn=parse_dic_section),
-    #     int(0x01023000): Xtag(name="DIC_NODAL", pyname="dic_nodal", parse_fn=parse_dic_section),
-    #     int(0x01024000): Xtag(name="DIC_DOMAIN", pyname="dic_domain", parse_fn=parse_dic_section),
-    #     int(0x01025000): Xtag(name="DIC_SURFACE", pyname="dic_surface", parse_fn=parse_dic_section),
-    #     int(0x01026000): Xtag(name="DIC_EDGE", pyname="dic_edge", parse_fn=parse_dic_section),
-    #     int(0x01020001): Xtag(name="DIC_ITEM", pyname="item", parse_fn=_parse_dic_item),
-    #     int(0x01020002): Xtag(name="DIC_ITEM_TYPE", pyname="itype", parse_fn=parse_uint32),
-    #     int(0x01020003): Xtag(name="DIC_ITEM_FMT", pyname="iformat", parse_fn=parse_uint32),
-    #     int(0x01020004): Xtag(name="DIC_ITEM_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01020005): Xtag(name="DIC_ITEM_ARRAYSIZE", pyname="array_size", parse_fn=parse_uint32),
-    #     int(0x01020006): Xtag(name="DIC_ITEM_ARRAYNAME", pyname="array_name", parse_fn=parse_char_array),
-    #     int(0x01020007): Xtag(name="DIC_ITEM_UNITS", pyname="units", parse_fn=parse_char_array),
-    #     # Mesh/
-    #     int(0x01040000): Xtag(name="MESH", pyname="mesh", parse_fn=parse_mesh),
-    #     # Mesh/Nodes
-    #     int(0x01041000): Xtag(name="NODE_SECTION", pyname="nodes", parse_fn=parse_node_section),
-    #     int(0x01041100): Xtag(name="NODE_HEADER", pyname="header", parse_fn=parse_header),
-    #     int(0x01041101): Xtag(name="NODE_SIZE", pyname="nnodes", parse_fn=parse_uint32),
-    #     int(0x01041102): Xtag(name="NODE_DIM", pyname="dimension", parse_fn=parse_uint32),
-    #     int(0x01041103): Xtag(name="NODE_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01041200): Xtag(name="NODE_COORDS", pyname="coords", parse_fn=parse_node_coords),
-    #     # Mesh/Domains
-    #     int(0x01042000): Xtag(name="DOMAIN_SECTION", pyname="domains", parse_fn=parse_domain_section),
-    #     # Mesh/Domains/Domain
-    #     int(0x01042100): Xtag(name="DOMAIN", pyname="domain", parse_fn=parse_domain),
-    #     int(0x01042101): Xtag(name="DOMAIN_HDR", pyname="header", parse_fn=parse_header),
-    #     int(0x01042102): Xtag(name="DOM_ELEM_TYPE", pyname="etype", parse_fn=parse_uint32),
-    #     int(0x01042103): Xtag(name="DOM_PART_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01032104): Xtag(name="DOM_ELEMS", pyname="nelems", parse_fn=parse_uint32),
-    #     int(0x01032105): Xtag(name="DOM_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01042200): Xtag(name="DOM_ELEM_LIST", pyname="elements", parse_fn=_parse_dom_elem_list),
-    #     int(0x01042201): Xtag(name="ELEMENT", pyname="element", parse_fn=parse_uint32),
-    #     # Mesh/Surfaces
-    #     int(0x01043000): Xtag(name="SURFACE_SECTION", pyname="surfaces", parse_fn=parse_surface_section),
-    #     # Mesh/Surfaces/Surface
-    #     int(0x01043100): Xtag(name="SURFACE", pyname="surface", parse_fn=parse_surface),
-    #     int(0x01043101): Xtag(name="SURFACE_HDR", pyname="header", parse_fn=parse_header),
-    #     int(0x01043102): Xtag(name="SURFACE_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01043103): Xtag(name="SURFACE_FACES", pyname="nfaces", parse_fn=parse_uint32),
-    #     int(0x01043104): Xtag(name="SURFACE_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01043105): Xtag(name="SURFACE_MAX_FACET_NODES", pyname="max_nodes", parse_fn=parse_uint32),
-    #     int(0x01043200): Xtag(name="FACE_LIST", pyname="faces", parse_fn=parse_face_list),
-    #     int(0x01043201): Xtag(name="FACE", pyname="face", parse_fn=parse_uint32),
-    #     int(0x01044000): Xtag(name="NODESET_SECTION", pyname="node_sets", parse_fn=parse_node_set_section),
-    #     int(0x01044100): Xtag(name="NODESET", pyname="node_set", parse_fn=parse_node_set),
-    #     int(0x01044101): Xtag(name="NODESET_HDR", pyname="header", parse_fn=parse_header),
-    #     int(0x01044102): Xtag(name="NODESET_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01044103): Xtag(name="NODESET_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01044104): Xtag(name="NODESET_SIZE", pyname="nnodes", parse_fn=parse_uint32),
-    #     int(0x01044200): Xtag(name="NODESET_LIST", pyname="nodes", parse_fn=_parse_nodeset_list),
-    #     int(0x01045000): Xtag(name="PARTS_SECTION", pyname="parts", parse_fn=_parse_parts_section),
-    #     int(0x01045100): Xtag(name="PART", pyname="part", parse_fn=_parse_part),
-    #     int(0x01045101): Xtag(name="PART_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01045102): Xtag(name="PART_NAME", pyname="name", parse_fn=parse_char_array),
-    #     # Mesh/ElementSets
-    #     # element set section was added in 4.1
-    #     int(0x01046000): Xtag(name="ELEMENTSET_SECTION", pyname="element_sets", parse_fn=_parse_elementset_section),
-    #     # Mesh/ElementSets/ElementSet
-    #     int(0x01046100): Xtag(name="ELEMENTSET", pyname="element_set", parse_fn=_parse_elementset),
-    #     int(0x01046101): Xtag(name="ELEMENTSET_HDR", pyname="header", parse_fn=_parse_header),
-    #     int(0x01046102): Xtag(name="ELEMENTSET_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01046103): Xtag(name="ELEMENTSET_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01046104): Xtag(name="ELEMENTSET_SIZE", pyname="nelems", parse_fn=parse_uint32),
-    #     int(0x01046200): Xtag(name="ELEMENTSET_LIST", pyname="elements", parse_fn=parse_uint32),
-    #     # Mesh/FacetSets
-    #     # facet set section was added in 4.1
-    #     int(0x01047000): Xtag(name="FACETSET_SECTION", pyname="facet_sets", parse_fn=_parse_facetset_section),
-    #     # Mesh/FacetSets/FacetSet
-    #     int(0x01047100): Xtag(name="FACETSET", pyname="facet_set", parse_fn=_parse_facetset),
-    #     int(0x01047101): Xtag(name="FACETSET_HDR", pyname="header", parse_fn=_parse_header),
-    #     int(0x01047102): Xtag(name="FACETSET_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01047103): Xtag(name="FACETSET_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01047104): Xtag(name="FACETSET_SIZE", pyname="nfacets", parse_fn=parse_uint32),
-    #     int(0x01047105): Xtag(name="FACETSET_MAXNODES", pyname="max_nodes", parse_fn=parse_uint32),
-    #     int(0x01047200): Xtag(name="FACETSET_LIST", pyname="facets", parse_fn=_parse_facetset_list),
-    #     int(0x01047201): Xtag(name="FACET", pyname="facet", parse_fn=parse_uint32),
-    #     # Mesh/Edges
-    #     int(0x01048000): Xtag(name="EDGE_SECTION", pyname="edges", parse_fn=_parse_edge_section),
-    #     # Mesh/Edges/Edge
-    #     int(0x01048100): Xtag(name="EDGE", pyname="edge", parse_fn=_parse_edge),
-    #     int(0x01048101): Xtag(name="EDGE_HDR", pyname="header", parse_fn=_parse_header),
-    #     int(0x01048102): Xtag(name="EDGE_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01048103): Xtag(name="EDGE_LINES", pyname="lines", parse_fn=parse_uint32),
-    #     int(0x01048104): Xtag(name="EDGE_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01048105): Xtag(name="EDGE_MAX_NODES", pyname="max_nodes", parse_fn=parse_uint32),
-    #     # Mesh/Edges/EdgeList
-    #     int(0x01048200): Xtag(name="EDGE_LIST", pyname="edges", parse_fn=_parse_edge_list),
-    #     # Mesh/Edges/EdgeList/Line
-    #     int(0x01048201): Xtag(name="LINE", pyname="line", parse_fn=parse_uint32),
-    #     # Mesh/Objects
-    #     int(0x01050000): Xtag(name="OBJECTS_SECTION", pyname="objects", parse_fn=_parse_objects_section),
-    #     # Mesh/Objects/Object
-    #     int(0x01050001): Xtag(name="OBJECT_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x01050002): Xtag(name="OBJECT_NAME", pyname="name", parse_fn=parse_char_array),
-    #     int(0x01050003): Xtag(name="OBJECT_TAG", pyname="tag", parse_fn=parse_uint32),
-    #     int(0x01050004): Xtag(name="OBJECT_POS", pyname="pos", parse_fn=parse_float32),
-    #     int(0x01050005): Xtag(name="OBJECT_ROT", pyname="rot", parse_fn=parse_float32),
-    #     int(0x01050006): Xtag(name="OBJECT_DATA", pyname="data", parse_fn=parse_float32),
-    #     # Mesh/Objects/Object/Point
-    #     int(0x01051000): Xtag(name="POINT_OBJECT", pyname="point", parse_fn=_parse_point_object),
-    #     int(0x01051001): Xtag(name="POINT_COORD", pyname="coord", parse_fn=parse_float32),
-    #     # Mesh/Objects/Object/Line
-    #     int(0x01052000): Xtag(name="LINE_OBJECT", pyname="line", parse_fn=_parse_line_object),
-    #     int(0x01052001): Xtag(name="LINE_COORDS", pyname="coords", parse_fn=parse_float32),
-    #     # State/
-    #     int(0x02000000): Xtag(name="STATE", pyname="state", parse_fn=_parse_state),
-    #     # State/Header
-    #     int(0x02010000): Xtag(name="STATE_HEADER", pyname="header", parse_fn=_parse_header),
-    #     int(0x02010001): Xtag(name="STATE_HDR_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x02010002): Xtag(name="STATE_HDR_TIME", pyname="time", parse_fn=parse_float32),
-    #     int(0x02010003): Xtag(name="STATE_STATUS", pyname="status", parse_fn=parse_uint32),
-    #     # State/Data
-    #     int(0x02020000): Xtag(name="STATE_DATA", pyname="state_data", parse_fn=_parse_state_data),
-    #     int(0x02020001): Xtag(name="STATE_VARIABLE", pyname="variable", parse_fn=_parse_state_variable),
-    #     int(0x02020002): Xtag(name="STATE_VAR_ID", pyname="id", parse_fn=parse_uint32),
-    #     int(0x02020003): Xtag(name="STATE_VAR_DATA", pyname="data", parse_fn=_parse_state_var_data),
-    #     int(0x02020100): Xtag(name="GLOBAL_DATA", pyname="data", parse_fn=_parse_state_section),
-    #     int(0x02020300): Xtag(name="NODE_DATA", pyname="data", parse_fn=_parse_state_section),
-    #     int(0x02020400): Xtag(name="ELEMENT_DATA", pyname="data", parse_fn=_parse_state_section),
-    #     int(0x02020500): Xtag(name="FACE_DATA", pyname="data", parse_fn=_parse_state_section),
-    #     int(0x02020600): Xtag(name="EDGE_DATA", pyname="data", parse_fn=_parse_state_section),
-    #     # State/MeshState
-    #     int(0x02030000): Xtag(name="MESH_STATE", pyname="mesh_state", parse_fn=_parse_mesh_state),
-    #     # State/MeshState/ElementState
-    #     int(0x02030001): Xtag(name="ELEMENT_STATE", pyname="element_state", parse_fn=parse_uint32),
-    #     # State/ObjectsState
-    #     int(0x02040000): Xtag(name="OBJECTS_STATE", pyname="objects_state", parse_fn=parse_uint32),
-    # }
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Convert FEBio .xplt file to HDF5")
+    parser.add_argument("inputfile", type=str)
+    parser.add_argument("-outputfile", type=str)
+    args = parser.parse_args()
+    to_hdf5(args.inputfile, args.outputfile)
