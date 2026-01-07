@@ -1,7 +1,6 @@
 from pathlib import Path
+from pyfebio import xplt
 
-import pyfebio as feb
 
-
-def test_read_xplt():
-    feb.xplt.to_hdf5(Path(__file__).parent.joinpath("../examples/contact.xplt").as_posix())
+def test_read_xplt(tmp_path):
+    xplt.to_hdf5(Path(__file__).parent.joinpath("../../assets/elastic_hex20.xplt").as_posix(), tmp_path/"elastic_hex20.hdf5")
