@@ -180,9 +180,10 @@ The modules in pyfebio are divided and named based on this structure.
 - step.py
 - output.py
 
-We have two additional modules:
+We have three additional modules:
 
 - model.py -- Assembles the XML tree
+- xplt.py -- Converts XPLT files to HDF5
 - _types.py -- Defines custom types used throughout the package
 
 All XML elements of the FEBio model are defined as **BaseXmlModel** classes. These inherit from
