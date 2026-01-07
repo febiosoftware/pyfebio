@@ -6,15 +6,15 @@ tags:
   - biomechanics
 authors:
   - name: Scott C. Sibole
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0003-2260-8167
     corresponding: true
-    affiliation: 1
-  - name: Jason P. Halloran
     affiliation: 1
   - name: Steve A. Maas
     affiliation: "2,3"
   - name: Michael R. Herron
     affiliation: "2,3"
+  - name: Jason P. Halloran
+    affiliation: 1
 
 affiliations:
  - name: Applied Sciences Laboratory, Washington State University, United States
@@ -23,7 +23,7 @@ affiliations:
    index: 2
  - name: Scientific Computing and Imaging Institute, University of Utah, United States
    index: 3
-date: 10 November 2025
+date: 7 January 2026
 bibliography: paper.bib
 ---
 
@@ -42,16 +42,42 @@ the wider Python ecosystem provides seamless integration with many packages for 
 
 # Statement of Need
 
-## Similar Projects
+Finite element models are often generated through a graphical user interface with point-and-click operations, which can be tedious, time-consuming, and error-prone. 
+Programmatic generation of FEBio models allows for more efficient and verifiable modeling workflows with great scalability. The Python language has become highly popular
+in scientific computing, data science, and machine learning with many libraries supporting these disciplines. Integration of `pyfebio` with the rich Python software 
+ecosystem allows for the creation of powerful workflows and applications utilizing FEA.
 
-- `febio-python` -- This package is similar in many ways to `pyfebio` with the primary difference being `pyfebio` explicitly represents model components, whereas
-`febio-python` employs more abstraction. Both approaches have advantages with `pyfebio` allowing for strong runtime validation with `pydantic` and `febio-python`
-allowing for easier generalization.
+# State of the Field 
+
+Similar projects to `pyfebio` include:
+
+- `febio-python` 
 - `interFEBio`
 - `waffleiron`
 - `FEPyio`
 
-# Methods
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  |                    | febio-python   | interFEBio   | waffleiron   | FEPyio   | pyfebio   |
+  +:==================:+:==============:+:============:+:============:+:========:+:=========:+
+  | Runtime Validation | No             | No           | No           | No       | Yes       |
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  | XPLT Handling      | In-memory      | In-memory    | In-memory    | No       | HDF5      | 
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  | Documentation      | Extensive      | Broken Link  | Planned      | No       | Extensive | 
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  | Type Annotation    | Yes            | Yes          | No           | Yes      | Yes       |
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  | Component Creation | Abstract       | Abstract     | Abstract     | Abstract | Concrete  |
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+  | Legacy Support     | Yes            | No           | Yes          | No       | No        |
+  +--------------------+----------------+--------------+--------------+----------+-----------+
+
+The major difference between `pyfebio` and these similar packages is the concrete definition and validation of all components.
+While an abstracted definition allows for flexibility and a smaller codebase, it often shifts the responsibility of ensuring validity 
+to the user. With concrete definitions, we can also constrain attributes with much more granularity. Furthermore, this approach
+makes the codebase simple and easy to extend.
+
+# Software Design
 
 An FEBio model is encoded in the Extensible Markup Language (XML), which adopts a tree structure with a root element
 and nested sub-elements. While long-established packages such as `ElementTree` and `lxml` exist for XML parsing and definition,
@@ -61,7 +87,25 @@ for validated XML (de)serialization. In addition to type validation, this approa
 on model values when appropriate e.g. an elastic modulus must be positive. When possible, default values are assigned to class attributes 
 to reduce the amount of code required when defining an FEBio model.
 
+`pyfebio` can translate a `meshio.Mesh` object to an FEBio mesh. With this approach, `meshio` can be used to read many popular mesh formats, which
+can then be translated to FEBio meshes. This also allows for the usage of higher-order elements.
+
+For interaction with the custom binary `XPLT` format, `pyfebio` provides translation to the popular `HDF5` format. After conversion, `HDF5` packages such as
+`h5py` can be used for data analysis and management. 
+
+# Research Impact
+
+`pyfebio` has been used extensively in internal modeling workflows with publications forthcoming. Collaborators in the National Institute of Health funded `KneeHub` project
+have been made aware of the public repository. Furthermore, by hosting `pyfebio` on the `febiosoftware` GitHub organization, visibility and awareness of the project in
+the FEBio user community should be increased.
+
+# AI usage disclosure
+
+Code prediction provided by the `Zeta` model implemented in the `Zed` integrated development environment software was used occasionally during development.  
+Large Language Model prompting was not employed.
 
 # Acknowledgements
+
+This project was supported with funding from NIH-NIBIB R01EB024573.
 
 # References
