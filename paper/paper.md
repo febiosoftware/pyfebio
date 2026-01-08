@@ -68,10 +68,13 @@ Similar projects to `pyfebio` include `febio-python`, `waffleiron`, and `FEPyio`
   | Components         | Abstract       | Abstract     | Abstract | Concrete  |
   | Legacy Support     | Yes            | Yes          | No       | No        |
 
-The major difference between `pyfebio` and these similar packages is the concrete definition and validation of all components.
+The major difference between `pyfebio` and these similar packages is the concrete definition and validation[^1] of all components.
 While an abstracted definition allows for flexibility and a smaller codebase, it often shifts the responsibility of ensuring validity 
 to the user. With concrete definitions, we can also constrain attributes with much more granularity. Furthermore, this approach
 makes the codebase simple and easy to extend.
+
+[^1]: Validation and validity reflects the language utilized in software development. In engineering, this would rather be referred to as
+verification.
 
 # Software Design
 
