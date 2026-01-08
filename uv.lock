@@ -831,7 +831,7 @@ wheels = [
 
 [[package]]
 name = "pyfebio"
-version = "0.1.0b0"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
