@@ -55,28 +55,18 @@ ecosystem allows for the creation of powerful workflows and applications utilizi
 
 # State of the Field 
 
-Similar projects to `pyfebio` include:
+Similar projects to `pyfebio` include `febio-python`, `waffleiron`, and `FEPyio`. \autoref{tab-comparison} compares features of these packages and `pyfebio`.
 
-- `febio-python` 
-- `interFEBio`
-- `waffleiron`
-- `FEPyio`
+: Comparison of packages supporting FEBio model generation in Python. \label{tab-comparison}
 
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  |                    | febio-python   | interFEBio   | waffleiron   | FEPyio   | pyfebio   |
-  +:==================:+:==============:+:============:+:============:+:========:+:=========:+
-  | Runtime Validation | No             | No           | No           | No       | Yes       |
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  | XPLT Handling      | In-memory      | In-memory    | In-memory    | No       | HDF5      | 
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  | Documentation      | Extensive      | Broken Link  | Planned      | No       | Extensive | 
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  | Type Annotation    | Yes            | Yes          | No           | Yes      | Yes       |
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  | Component Creation | Abstract       | Abstract     | Abstract     | Abstract | Concrete  |
-  +--------------------+----------------+--------------+--------------+----------+-----------+
-  | Legacy Support     | Yes            | No           | Yes          | No       | No        |
-  +--------------------+----------------+--------------+--------------+----------+-----------+
+  |                    | febio-python   | waffleiron   | FEPyio   | pyfebio   |
+  |:-------------------|:---------------|:-------------|:---------|:----------|
+  | Runtime Validation | No             | No           | No       | Yes       |
+  | XPLT Handling      | In-memory      | In-memory    | No       | HDF5      | 
+  | Documentation      | Yes            | Planned      | No       | Yes       | 
+  | Type Annotation    | Yes            | No           | Yes      | Yes       |
+  | Components         | Abstract       | Abstract     | Abstract | Concrete  |
+  | Legacy Support     | Yes            | Yes          | No       | No        |
 
 The major difference between `pyfebio` and these similar packages is the concrete definition and validation of all components.
 While an abstracted definition allows for flexibility and a smaller codebase, it often shifts the responsibility of ensuring validity 
