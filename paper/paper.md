@@ -4,6 +4,8 @@ tags:
   - Python
   - finite element analysis
   - biomechanics
+  - modeling and simulation
+  - automated workflows
 authors:
   - name: Scott C. Sibole
     orcid: 0000-0003-2260-8167
@@ -95,7 +97,7 @@ custom file formats. To handle translation, of these formats the `meshio` packag
 a `meshio.Mesh` object and then `pyfebio` can translate this object into an FEBio mesh. This also allows for the usage of higher-order elements.
 
 FEBio results are saved in a custom binary format called `XPLT`. Workflows typically need to access and post-process simulation results. To this end, `pyfebio` supports translation 
-to the popular `HDF5` format. After conversion, `HDF5` packages such as`h5py` can be used for data analysis and management. `HDF5` also supports lazy loading such that only accessed
+to the popular `HDF5` format. After conversion, `HDF5` packages such as `h5py` can be used for data analysis and management. `HDF5` also supports lazy loading such that only accessed
 data is loaded into memory. This enables handling of large datasets that may not fit into memory.
 
 # Research Impact
