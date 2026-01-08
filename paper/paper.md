@@ -39,13 +39,16 @@ software nearly two decades ago [@Maas:2012]. FEBio has been widely adopted in t
 
 `pyfebio` is a Python package supporting programmatic generation of FEBio model definition files. Beyond enabling scripted modeling workflows, belonging to
 the wider Python ecosystem provides seamless integration with many packages for scientific computing, data science and visualization, machine learning, *etc*.
+Furthermore, modeling and simulation workflows often require iterations of simulations with changing parameters each with post-processing of results.
+With scripted workflows, these iterations are not only automated but also have inherent provenance tracking, which enables reproducibility and repeatability
+of the analyses.
 
 # Statement of Need
 
 Finite element models are often generated through a graphical user interface with point-and-click operations, which can be tedious, time-consuming, and error-prone. 
-Programmatic generation of FEBio models allows for more efficient and verifiable modeling workflows with great scalability. The Python language has become highly popular
+Programmatic generation of FEBio models allows for more efficient, verifiable, and scalable modeling workflows. The Python language has become highly popular
 in scientific computing, data science, and machine learning with many libraries supporting these disciplines. Integration of `pyfebio` with the rich Python software 
-ecosystem allows for the creation of powerful workflows and applications utilizing FEA.
+ecosystem allows for the creation of powerful workflows and applications utilizing FEA with FEBio.
 
 # State of the Field 
 
@@ -87,22 +90,22 @@ for validated XML (de)serialization. In addition to type validation, this approa
 on model values when appropriate e.g. an elastic modulus must be positive. When possible, default values are assigned to class attributes 
 to reduce the amount of code required when defining an FEBio model.
 
-`pyfebio` can translate a `meshio.Mesh` object to an FEBio mesh. With this approach, `meshio` can be used to read many popular mesh formats, which
-can then be translated to FEBio meshes. This also allows for the usage of higher-order elements.
+Discretization of model geometry, referred to as meshing, is a challenging task for which numerous software applications exist. These, in turn, often have
+custom file formats. To handle translation, of these formats the `meshio` package is utilized. Meshes defined in various formats are first translated into
+a `meshio.Mesh` object and then `pyfebio` can translate this object into an FEBio mesh. This also allows for the usage of higher-order elements.
 
-For interaction with the custom binary `XPLT` format, `pyfebio` provides translation to the popular `HDF5` format. After conversion, `HDF5` packages such as
-`h5py` can be used for data analysis and management. 
+FEBio results are saved in a custom binary format called `XPLT`. Workflows typically need to access and post-process simulation results. To this end, `pyfebio` supports translation 
+to the popular `HDF5` format. After conversion, `HDF5` packages such as`h5py` can be used for data analysis and management. `HDF5` also supports lazy loading such that only accessed
+data is loaded into memory. This enables handling of large datasets that may not fit into memory.
 
 # Research Impact
 
-`pyfebio` has been used extensively in internal modeling workflows with publications forthcoming. Collaborators in the National Institute of Health funded `KneeHub` project
-have been made aware of the public repository. Furthermore, by hosting `pyfebio` on the `febiosoftware` GitHub organization, visibility and awareness of the project in
-the FEBio user community should be increased.
+`pyfebio` has been used extensively in internal modeling workflows with publications forthcoming. Collaborators in the National Institutes of Health funded `KneeHub` project [@Rooks2021]
+have been made aware of the public repository. Furthermore, by hosting `pyfebio` on the `febiosoftware` GitHub organization, visibility and awareness of the project in the FEBio user community should be increased.
 
 # AI usage disclosure
 
-Code prediction provided by the `Zeta` model implemented in the `Zed` integrated development environment software was used occasionally during development.  
-Large Language Model prompting was not employed.
+Code prediction provided by the `Zeta` model implemented in the `Zed` integrated development environment software was used occasionally during development. Large Language Model prompting was not employed.
 
 # Acknowledgements
 
