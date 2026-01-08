@@ -12,14 +12,16 @@ authors:
     corresponding: true
     affiliation: 1
   - name: Steve A. Maas
+    orcid: 0009-0002-7093-8531
     affiliation: "2,3"
   - name: Michael R. Herron
     affiliation: "2,3"
   - name: Jason P. Halloran
+    orcid: 0000-0001-5866-6583
     affiliation: 1
 
 affiliations:
- - name: Applied Sciences Laboratory, Washington State University, United States
+ - name: Institute for Shock Physics, Applied Sciences Laboratory, Washington State University, United States
    index: 1
  - name: Department of Biomedical Engineering, University of Utah, United States
    index: 2
@@ -41,9 +43,8 @@ software nearly two decades ago [@Maas:2012]. FEBio has been widely adopted in t
 
 `pyfebio` is a Python package supporting programmatic generation of FEBio model definition files. Beyond enabling scripted modeling workflows, belonging to
 the wider Python ecosystem provides seamless integration with many packages for scientific computing, data science and visualization, machine learning, *etc*.
-Furthermore, modeling and simulation workflows often require iterations of simulations with changing parameters each with post-processing of results.
-With scripted workflows, these iterations are not only automated but also have inherent provenance tracking, which enables reproducibility and repeatability
-of the analyses.
+Furthermore, modeling and simulation studies often require repeated workflow execution with changing parameters, which can hinder reproducibility and repeatability. 
+Scripting enables the orchestration of iterative workflows and facilitates provenance tracking.
 
 # Statement of Need
 
@@ -89,12 +90,12 @@ and nested sub-elements. While long-established packages such as `ElementTree` a
 a specialized package with predefined XML elements for FEBio model components was desired. To this end, `pyfebio` leverages the
 `pydantic-xml` package [@pydantic_xml] that extends the popular runtime static type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025],
 for validated XML (de)serialization. In addition to type validation, this approach also allows for the enforcement of custom constraints
-on model values when appropriate e.g. an elastic modulus must be positive. When possible, default values are assigned to class attributes 
+on model values when appropriate; e.g., an elastic modulus must be positive. When possible, default values are assigned to class attributes 
 to reduce the amount of code required when defining an FEBio model.
 
-Discretization of model geometry, referred to as meshing, is a challenging task for which numerous software applications exist. These, in turn, often have
-custom file formats. To handle translation, of these formats the `meshio` package is utilized. Meshes defined in various formats are first translated into
-a `meshio.Mesh` object and then `pyfebio` can translate this object into an FEBio mesh. This also allows for the usage of higher-order elements.
+Discretization of model geometry, referred to as meshing, is a challenging task for which numerous software applications exist. These applications often have
+custom file formats. To handle translation of these formats the `meshio` package is utilized. Meshes defined in various formats are first translated into
+a `meshio.Mesh` object and then `pyfebio` provides a function to translate this object into an FEBio mesh. This also allows for the usage of higher-order elements.
 
 FEBio results are saved in a custom binary format called `XPLT`. Workflows typically need to access and post-process simulation results. To this end, `pyfebio` supports translation 
 to the popular `HDF5` format. After conversion, `HDF5` packages such as `h5py` can be used for data analysis and management. `HDF5` also supports lazy loading such that only accessed
