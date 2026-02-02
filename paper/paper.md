@@ -1,5 +1,5 @@
 ---
-title: 'pyfebio: A Python Application Programming Interface for FEBio'
+title: "pyfebio: A Python Application Programming Interface for FEBio"
 tags:
   - Python
   - finite element analysis
@@ -21,97 +21,145 @@ authors:
     affiliation: 1
 
 affiliations:
- - name: Institute for Shock Physics, Applied Sciences Laboratory, Washington State University, United States
-   index: 1
- - name: Department of Biomedical Engineering, University of Utah, United States
-   index: 2
- - name: Scientific Computing and Imaging Institute, University of Utah, United States
-   index: 3
+  - name: Institute for Shock Physics, Applied Sciences Laboratory, Washington State University, United States
+    index: 1
+  - name: Department of Biomedical Engineering, University of Utah, United States
+    index: 2
+  - name: Scientific Computing and Imaging Institute, University of Utah, United States
+    index: 3
 date: 7 January 2026
 bibliography: paper.bib
 ---
 
-# Summary
+## Summary
 
-The finite element method is a popular numerical technique for solving the partial differential equations that describe physical phenomena.
-Its application, referred to as finite element analysis (FEA), has seen ubiquitous adoption across engineering and the natural sciences.
-While many general-purpose FEA software packages exist, it is commonly necessary to extend their functionality for a particular application through
-custom extensions or plugins often written by the user or research community. In biomedical fields particularly, one encounters the need for highly
-specialized models of biological tissue material behavior, growth mechanics, multiphasic physics, active force production, and other complex
-phenomena. Addressing these challenges was the motivation for the development of the FEBio (Finite Elements for Biomechanics) open-source
-software nearly two decades ago [@Maas:2012]. FEBio has been widely adopted in the biomedical community with over 25,000 registered users, 1200 citations of
-its primary publication, and reported use in academic curricula by 35 professors worldwide.
+The finite element method is a popular numerical technique for solving the
+partial differential equations that describe physical phenomena.
+Its application, referred to as finite element analysis (FEA), has seen
+ubiquitous adoption across engineering and the natural sciences.
+While many general-purpose FEA software packages exist, it is commonly necessary
+to extend their functionality for a particular application through
+custom extensions or plugins often written by the user or research community.
+In biomedical fields particularly, one encounters the need for highly
+specialized models of biological tissue material behavior, growth mechanics,
+multiphasic physics, active force production, and other complex phenomena.
+Addressing these challenges was the motivation for the development of
+the FEBio (Finite Elements for Biomechanics) open-source software nearly two
+decades ago [@Maas:2012]. FEBio has been widely adopted in the biomedical
+community with over 25,000 registered users, 1200 citations of
+its primary publication, and reported use in academic curricula by 35 professors
+worldwide.
 
-`pyfebio` is a Python package supporting programmatic generation of FEBio model definition files. Beyond enabling scripted modeling workflows, belonging to
-the wider Python ecosystem provides seamless integration with many packages for scientific computing, data science and visualization, machine learning, *etc*.
-Furthermore, modeling and simulation studies often require repeated workflow execution with changing parameters, which can hinder reproducibility and repeatability. 
-Scripting enables the orchestration of iterative workflows and facilitates provenance tracking.
+`pyfebio` is a Python package supporting programmatic generation of FEBio model
+definition files. Beyond enabling scripted modeling workflows, belonging to
+the wider Python ecosystem provides seamless integration with many packages for
+scientific computing, data science and visualization, machine learning, _etc_.
+Furthermore, modeling and simulation studies often require repeated workflow
+execution with changing parameters, which can hinder reproducibility and
+repeatability. Scripting enables the orchestration of iterative workflows and
+facilitates provenance tracking.
 
-# Statement of Need
+## Statement of Need
 
-Finite element models are often generated through a graphical user interface with point-and-click operations, which can be tedious, time-consuming, and error-prone. 
-Programmatic generation of FEBio models allows for more efficient, verifiable, and scalable modeling workflows. The Python language has become highly popular
-in scientific computing, data science, and machine learning with many libraries supporting these disciplines. Integration of `pyfebio` with the rich Python software 
-ecosystem allows for the creation of powerful workflows and applications utilizing FEA with FEBio.
+Finite element models are often generated through a graphical user interface
+with point-and-click operations, which can be tedious, time-consuming, and
+error-prone. Programmatic generation of FEBio models allows for more efficient,
+verifiable, and scalable modeling workflows. The Python language has become
+highly popular in scientific computing, data science, and machine learning with
+many libraries supporting these disciplines. Integration of `pyfebio` with the
+rich Python software ecosystem allows for the creation of powerful workflows and
+applications utilizing FEA with FEBio.
 
-# State of the Field 
+## State of the Field
 
-Similar projects to `pyfebio` include `febio-python`, `waffleiron`, and `FEPyio`. \autoref{tab-comparison} compares features of these packages and `pyfebio`.
+Similar projects to `pyfebio` include `febio-python`, `waffleiron`, and
+`FEPyio`. \autoref{tab-comparison} compares features of these packages and
+`pyfebio`.
 
 The definitions of the employed terms follow as:
 
-- **Type Annotation**: The use of Python type hints to specify the expected type of variables e.g. `n: int = 42`. These aid package users and developers but are not enforced at runtime without additional tools.
-- **Runtime Validation**: Enforcement of Python type annotations and other defined constraints at runtime.
+- **Type Annotation**: The use of Python type hints to specify the expected type
+  of variables e.g. `n: int = 42`. These aid package users and developers but
+  are not enforced at runtime without additional tools.
+- **Runtime Validation**: Enforcement of Python type annotations and other
+  defined constraints at runtime.
 - **XPLT Handling**: The ability to process XPLT files generated by FEBio.
 - **Documentation**: The availability of documentation for the package.
-- **Components (Abstract vs Concrete)**: An abstract component does not have attributes and tags explicitly set, whereas a concrete component does. Most packages employ both approaches; `pyfebio` implements all components concretely.
+- **Components (Abstract vs Concrete)**: An abstract component does not have
+  attributes and tags explicitly set, whereas a concrete component does. Most
+  packages employ both approaches; `pyfebio` implements all components
+  concretely.
 - **Legacy Support**: Support for legacy FEBio models and formats.
 
-: Comparison of packages supporting FEBio model generation in Python. \label{tab-comparison}
+: Comparison of packages supporting FEBio model generation in Python.
+\label{tab-comparison}
 
-  |                    | febio-python   | waffleiron   | FEPyio   | pyfebio   |
-  |:-------------------|:---------------|:-------------|:---------|:----------|
-  | Type Annotation    | Yes            | No           | Yes      | Yes       |
-  | Runtime Validation | No             | No           | No       | Yes       |
-  | XPLT Handling      | In-memory      | In-memory    | No       | HDF5      | 
-  | Documentation      | Yes            | Planned      | No       | Yes       | 
-  | Components         | Abstract       | Abstract     | Abstract | Concrete  |
-  | Legacy Support     | Yes            | Yes          | No       | No        |
+|                    | febio-python | waffleiron | FEPyio   | pyfebio  |
+| :----------------- | :----------- | :--------- | :------- | :------- |
+| Type Annotation    | Yes          | No         | Yes      | Yes      |
+| Runtime Validation | No           | No         | No       | Yes      |
+| XPLT Handling      | In-memory    | In-memory  | No       | HDF5     |
+| Documentation      | Yes          | Planned    | No       | Yes      |
+| Components         | Abstract     | Abstract   | Abstract | Concrete |
+| Legacy Support     | Yes          | Yes        | No       | No       |
 
-The major difference between `pyfebio` and these similar packages is the concrete definition and validation[^1] of all components. While an abstracted definition allows for flexibility and a smaller codebase, it often shifts the responsibility of ensuring validity to the user. With concrete definitions, we can also constrain attributes with much more granularity. Furthermore, this approach makes the codebase simple and easy to extend.
+The major difference between `pyfebio` and these similar packages is the
+concrete definition and validation[^1] of all components. While an abstracted
+definition allows for flexibility and a smaller codebase, it often shifts the
+responsibility of ensuring validity to the user. With concrete definitions, we
+can also constrain attributes with much more granularity. Furthermore, this
+approach makes the codebase simple and easy to extend.
 
-[^1]: Validation and validity reflects the language utilized in software development. In engineering, this would rather be referred to as
-verification.
+[^1]:
+    Validation and validity reflects the language utilized in software
+    development. In engineering, this would rather be referred to as
+    verification.
 
-# Software Design
+## Software Design
 
-An FEBio model is encoded in the Extensible Markup Language (XML), which adopts a tree structure with a root element
-and nested sub-elements. While long-established packages such as `ElementTree` and `lxml` exist for XML parsing and definition,
-a specialized package with predefined XML elements for FEBio model components was desired. To this end, `pyfebio` leverages the
-`pydantic-xml` package [@pydantic_xml] that extends the popular runtime static type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025],
-for validated XML (de)serialization. In addition to type validation, this approach also allows for the enforcement of custom constraints
-on model values when appropriate; e.g., an elastic modulus must be positive. When possible, default values are assigned to class attributes 
-to reduce the amount of code required when defining an FEBio model.
+An FEBio model is encoded in the Extensible Markup Language (XML), which adopts
+a tree structure with a root element and nested sub-elements. While
+long-established packages such as `ElementTree` and `lxml` exist for XML parsing
+and definition, a specialized package with predefined XML elements for FEBio
+model components was desired. To this end, `pyfebio` leverages the
+`pydantic-xml` package [@pydantic_xml] that extends the popular runtime static
+type checking library, `pydantic` [@Colvin_Pydantic_Validation_2025], for
+validated XML (de)serialization. In addition to type validation, this approach
+also allows for the enforcement of custom constraints on model values when
+appropriate; e.g., an elastic modulus must be positive. When possible, default
+values are assigned to class attributes to reduce the amount of code required
+when defining an FEBio model.
 
-Discretization of model geometry, referred to as meshing, is a challenging task for which numerous software applications exist. These applications often have
-custom file formats. To handle translation of these formats the `meshio` package is utilized. Meshes defined in various formats are first translated into
-a `meshio.Mesh` object and then `pyfebio` provides a function to translate this object into an FEBio mesh. Element, node, and surface sets will likewise be translated
-from definitions in the original format.
+Discretization of model geometry, referred to as meshing, is a challenging task
+for which numerous software applications exist. These applications often have
+custom file formats. To handle translation of these formats, the `meshio`
+package is utilized. Meshes defined in various formats are first translated into
+a `meshio.Mesh` object and then `pyfebio` provides a function to translate this
+object into an FEBio mesh. Element, node, and surface sets will likewise be
+translated from definitions in the original format.
 
-FEBio results are saved in a custom binary format called `XPLT`. Workflows typically need to access and post-process simulation results. To this end, `pyfebio` supports translation 
-to the popular `HDF5` format. After conversion, `HDF5` packages such as `h5py` can be used for data analysis and management.  
+FEBio results are saved in a custom binary format called `XPLT`. Workflows
+typically need to access and post-process simulation results. To this end,
+`pyfebio` supports translation to the popular `HDF5` format. After conversion,
+`HDF5` packages such as `h5py` can be used for data analysis and management.
 
-# Research Impact
+## Research Impact
 
-`pyfebio` has been used extensively in internal modeling workflows with publications forthcoming. Collaborators in the National Institutes of Health funded `KneeHub` project [@Rooks2021]
-have been made aware of the public repository. Furthermore, by hosting `pyfebio` on the `febiosoftware` GitHub organization, visibility and awareness of the project in the FEBio user community should be increased.
+`pyfebio` has been used extensively in internal modeling workflows with
+publications forthcoming. Collaborators in the National Institutes of Health
+funded `KneeHub` project [@Rooks2021] have been made aware of the public
+repository. Furthermore, by hosting `pyfebio` on the `febiosoftware` GitHub
+organization, visibility and awareness of the project in the FEBio user
+community should be increased.
 
-# AI usage disclosure
+## AI usage disclosure
 
-Code prediction provided by the `Zeta` model implemented in the `Zed` integrated development environment software was used occasionally during development. Large Language Model prompting was not employed.
+Code prediction provided by the `Zeta` model implemented in the `Zed` integrated
+development environment software was used occasionally during development. Large
+Language Model prompting was not employed.
 
-# Acknowledgements
+## Acknowledgements
 
 This project was supported with funding from NIH-NIBIB R01EB024573.
 
-# References
+## References
