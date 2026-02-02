@@ -130,13 +130,13 @@ appropriate; e.g., an elastic modulus must be positive. When possible, default
 values are assigned to class attributes to reduce the amount of code required
 when defining an FEBio model.
 
-Discretization of model geometry, referred to as meshing, is a challenging task
-for which numerous software applications exist. These applications often have
-custom file formats. To handle translation of these formats, the `meshio`
-package is utilized. Meshes defined in various formats are first translated into
-a `meshio.Mesh` object and then `pyfebio` provides a function to translate this
-object into an FEBio mesh. Element, node, and surface sets will likewise be
-translated from definitions in the original format.
+Mesh generation of model geometry is a challenging task for which numerous
+software applications exist. These applications often have custom file formats.
+To handle translation of these formats, the `meshio` package is utilized. Meshes
+defined in various formats are first translated into a `meshio.Mesh` object and
+then `pyfebio` provides a function to translate this object into an FEBio mesh.
+Element, node, and surface sets will likewise be translated from definitions in
+the original format.
 
 FEBio results are saved in a custom binary format called `XPLT`. Workflows
 typically need to access and post-process simulation results. To this end,
