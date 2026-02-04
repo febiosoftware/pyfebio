@@ -16,6 +16,7 @@ authors:
     affiliation: "2,3"
   - name: Michael R. Herron
     affiliation: "2,3"
+    orcid: 0000-0002-6660-2464
   - name: Jason P. Halloran
     orcid: 0000-0001-5866-6583
     affiliation: 1
