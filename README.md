@@ -4,6 +4,31 @@
 
 This is a Python package for generating FEBio input files and converting XPLT files to HDF5. We rely heavily on pydantic and pydantic-xml for type validation and XML serialization. Many of FEBio's features are covered, but not all.
 
+Our design focuses on:
+
+𝗘𝗮𝘀𝘆 𝗶𝗻𝘀𝘁𝗮𝗹𝗹𝗮𝘁𝗶𝗼𝗻
+
+Python wheels are built and uploaded to PyPI for installation with pip or other tools. Installation from source is simplified with the powerful and user-friendly 𝘶𝘷 package manager.
+
+𝗥𝘂𝗻𝘁𝗶𝗺𝗲 𝗩𝗮𝗹𝗶𝗱𝗮𝘁𝗲𝗱 𝗖𝗹𝗮𝘀𝘀𝗲𝘀 𝗳𝗼𝗿 𝗠𝗼𝗱𝗲𝗹 𝗖𝗼𝗺𝗽𝗼𝗻𝗲𝗻𝘁𝘀
+
+All the components necessary to construct an FEBio model are defined as classes inheriting from the 𝘉𝘢𝘴𝘦𝘔𝘰𝘥𝘦𝘭 provided by the popular 𝘱𝘺𝘥𝘢𝘯𝘵𝘪𝘤 library, which allows for enforcement of type and value constraints at runtime. This enables the definition of “guard rails” when defining these components to help ensure a valid FEBio model is created.
+
+𝗧𝘆𝗽𝗲 𝗛𝗶𝗻𝘁𝘀 𝘁𝗼 𝗲𝗻𝗵𝗮𝗻𝗰𝗲 𝗜𝗗𝗘 𝗲𝘅𝗽𝗲𝗿𝗶𝗲𝗻𝗰𝗲
+
+Modern integrated development environments in combination with a linter, formatter,  and/or a language server protocol can aid code development by providing auto-completion, highlighting syntax and type errors and style violations, and formatting code based on a style standard. This functionality is greatly enhanced when a Python library provides “type hints.” When present, in-line help provided by these tools can bypass the need to consult the documentation directly.
+
+𝗠𝗶𝗻𝗶𝗺𝗮𝗹 𝗗𝗲𝗽𝗲𝗻𝗱𝗲𝗻𝗰𝗶𝗲𝘀
+
+By utilizing a small dependency set, 𝘱𝘺𝘧𝘦𝘣𝘪𝘰 should "play nice" with the wider Python ecosystem, allowing users to build solutions with the libraries of their choice.
+
+𝗗𝗼𝗰𝘂𝗺𝗲𝗻𝘁𝗮𝘁𝗶𝗼𝗻 𝘃𝗶𝗮 𝗦𝗽𝗵𝗶𝗻𝘅
+
+Organized and searchable documentation is automatically generated with Sphinx.
+
+𝗧𝗲𝘀𝘁𝗶𝗻𝗴
+
+The FEBio development team has helped us develop continuous integration tasks to test our library with the latest FEBio release. We are still working on full code test coverage but once complete this will help maintain compatibility and functionality with future releases.
 ## Getting Started
 
 - [Installation](#installation)
