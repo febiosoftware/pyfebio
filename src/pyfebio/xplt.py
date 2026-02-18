@@ -26,7 +26,6 @@ as:
 """
 
 import logging
-from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Literal
 
@@ -349,9 +348,10 @@ VAR_SHAPE_LUT = {0: (-1, 1), 1: (-1, 3), 2: (-1, 6), 3: (-1, 3), 4: (-1, 21), 5:
 # 6: ARRAY
 # 7: ARRAY_VEC3F
 
+
 def check_file_is_febio(buffer):
     if not np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] == int(FEBIO_TAG):
-        dtypes_to_little__ENDIAN(_DTYPES)
+        dtypes_to_little_endian(_DTYPES)
         if np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] == int(FEBIO_TAG):
             log.info("File is FEBio, but in Big ENDIAN format -- will be byte-swapped to Little _ENDIAN")
         else:
@@ -711,10 +711,10 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_PARTS_SECTION":
-                parts = parse_parts_section(child)
+                parse_parts_section(child)
                 i += 8 + offset
             case "PLT_OBJECTS_SECTION":
-                objects = parse_objects_section(child)
+                parse_objects_section(child)
                 i += 8 + offset
             case _:
                 i += 8 + offset
