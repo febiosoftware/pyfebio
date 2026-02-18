@@ -252,11 +252,11 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Granular control for integration schemes, etc.
 - MeshData Section
   - ☑️ Node Data
-  - ☑️ Scalar
-  - ☑️ Vector3
+    - ☑️ Scalar
+    - ☑️ Vector3
   - ☑️ Element Data
-  - ☑️ Scalar
-  - ☑️ Vector3
+    - ☑️ Scalar
+    - ☑️ Vector3
   - ❌ Surface Data
     - ❌ Scalar
     - ❌ Vector3
@@ -330,18 +330,18 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Prestrain
   - ☑️ In-Situ Stretch
 - Contact
-  - ☑️ Sliding
-  - ☑️ Elastic
-  - ☑️ Facet-Facet
-  - ☑️ Node-Facet
-  - ☑️ Biphasic
-  - ☑️ Sliding2
+  - ✅ Sliding
+    - ✅ Elastic
+    - ✅ Facet-Facet
+    - ✅ Node-Facet
+  - ✅ Biphasic
+  - ✅ Sliding2
   - ☑️ Contact Potential Formulation
   - ☑️ Tie
-  - ☑️ Elastic
-  - ☑️ Facet-Facet
-  - ☑️ Node-Facet
-  - ☑️ Biphasic
+    - ☑️ Elastic
+    - ☑️ Facet-Facet
+    - ☑️ Node-Facet
+    - ☑️ Biphasic
 - Step
   - ☑️ Multistep Analysis
 - Output
