@@ -22,10 +22,6 @@ def base_model(hex8_contact_febmesh):
     my_model.mesh_.add_surface_pair(feb.mesh.SurfacePair(name="contact", primary="bottom-box-top", secondary="top-box-bottom"))
     my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-bottom", x_dof=1, y_dof=1, z_dof=1))
     my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-top", x_dof=1, y_dof=1, z_dof=0))
-    my_model.boundary_.add_bc(
-        feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=-0.15))
-    )
-    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
     my_model.output_.add_plotfile(
         feb.output.OutputPlotfile(
             all_vars=[
@@ -41,6 +37,8 @@ def base_model(hex8_contact_febmesh):
 @pytest.fixture(scope="module")
 def base_biphasic_model(hex20_contact_febmesh):
     my_model = feb.model.BiphasicModel(mesh_=hex20_contact_febmesh)
+    my_model.control_.time_steps = 3
+    my_model.control_.step_size = 0.1
     for i, part in enumerate(my_model.mesh_.elements):
         mat = feb.material.BiphasicMaterial(
             name=part.name,
@@ -58,7 +56,7 @@ def base_biphasic_model(hex20_contact_febmesh):
     )
     my_model.boundary_.add_bc(feb.boundary.BCZeroFluidPressure(node_set="top-box-left"))
     my_model.boundary_.add_bc(feb.boundary.BCZeroFluidPressure(node_set="bottom-box-left"))
-    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "0.1,1", "1,1"])))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "0.2,1", "0.3,1"])))
     my_model.output_.add_plotfile(
         feb.output.OutputPlotfile(
             all_vars=[
@@ -77,6 +75,10 @@ def test_sliding_contact(base_model, tmp_path):
     for contact_cls in get_args(feb.contact.SlidingContactType):
         my_model = deepcopy(base_model)
         my_model.contact_.add_contact(contact_cls(name="sliding_contact", surface_pair="contact", auto_penalty=1, laugon="AUGLAG"))
+        my_model.boundary_.add_bc(
+            feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=-0.15))
+        )
+        my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
         my_model.save(tmp_path / f"{contact_cls.__name__}.feb")
         result = feb.model.run_model(tmp_path / f"{contact_cls.__name__}.feb")
         assert result == 0, f"Failed to run model for {contact_cls.__name__}"
@@ -89,3 +91,30 @@ def test_biphasic_sliding_contact(base_biphasic_model, tmp_path):
         my_model.save(tmp_path / f"{contact_cls.__name__}.feb")
         result = feb.model.run_model(tmp_path / f"{contact_cls.__name__}.feb")
         assert result == 0, f"Failed to run model for {contact_cls.__name__}"
+
+
+def test_tie_constraints(base_model, tmp_path):
+    for tie_cls in (feb.contact.TiedElastic, feb.contact.TiedFacetOnFacet, feb.contact.TiedNodeOnFacet):
+        my_model = deepcopy(base_model)
+        my_model.contact_.add_contact(tie_cls(name="tie_constraint", surface_pair="contact", penalty=100.0, laugon="AUGLAG"))
+        my_model.boundary_.add_bc(
+            feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=0.15))
+        )
+        my_model.boundary_.add_bc(
+            feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="x", value=feb.boundary.Value(lc=1, text=0.15))
+        )
+        my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+        my_model.save(tmp_path / f"{tie_cls.__name__}.feb")
+        result = feb.model.run_model(tmp_path / f"{tie_cls.__name__}.feb")
+        assert result == 0, f"Failed to run model for {tie_cls.__name__}"
+
+
+def test_biphasic_tie_constraint(base_biphasic_model, tmp_path):
+    my_model = deepcopy(base_biphasic_model)
+    my_model.contact_.add_contact(feb.contact.TiedBiphasic(name="sliding_contact", surface_pair="contact", auto_penalty=1, laugon="AUGLAG"))
+    my_model.boundary_.add_bc(
+        feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="x", value=feb.boundary.Value(lc=1, text=0.05))
+    )
+    my_model.save(tmp_path / f"{feb.contact.TiedBiphasic.__name__}.feb")
+    result = feb.model.run_model(tmp_path / f"{feb.contact.TiedBiphasic.__name__}.feb")
+    assert result == 0, f"Failed to run model for {feb.contact.TiedBiphasic.__name__}"

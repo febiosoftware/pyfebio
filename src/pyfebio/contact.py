@@ -96,7 +96,6 @@ class TiedBase(BaseXmlModel, validate_assignment=True):
     laugon: Literal["PENALTY", "AUGLAG"] = element(default="PENALTY")
     tolerance: float = element(default=0.1)
     penalty: float = element(default=1)
-    knmult: float = element(default=1)
     minaug: int = element(default=0)
     maxaug: int = element(default=10)
 
@@ -106,6 +105,7 @@ class TiedElastic(TiedBase):
     auto_penalty: Literal[0, 1] = element(default=0)
     update_penalty: Literal[0, 1] = element(default=0)
     two_pass: Literal[0, 1] = element(default=0)
+    knmult: float = element(default=1)
     search_tol: float = element(default=0.01)
     search_radius: float = element(default=1)
     gaptol: float = element(default=-1)
@@ -113,22 +113,18 @@ class TiedElastic(TiedBase):
 
 
 class TiedFacetOnFacet(TiedBase):
-    type: Literal["tied-facet-on-facet"] = attr(
-        default="tied-facet-on-facet", frozen=True
-    )
+    type: Literal["tied-facet-on-facet"] = attr(default="tied-facet-on-facet", frozen=True)
     tolerance: float = element(default=0.01)
     search_tolerance: float = element(default=0.0001)
     gap_offset: Literal[0, 1] = element(default=0)
 
 
 class TiedNodeOnFacet(TiedBase):
-    type: Literal["tied-node-on-facet"] = attr(
-        default="tied-node-on-facet", frozen=True
-    )
+    type: Literal["tied-node-on-facet"] = attr(default="tied-node-on-facet", frozen=True)
     tolerance: float = element(default=0.01)
     search_tolerance: float = element(default=0.0001)
     offset_shells: Literal[0, 1] = element(default=0)
-    max_distance: Literal[0] | float = element(deafult=0)
+    max_distance: Literal[0] | float = element(default=0)
     special: Literal[0, 1] = element(default=1)
     node_reloc: Literal[0, 1] = element(default=0)
 
@@ -166,7 +162,5 @@ class Contact(BaseXmlModel, tag="Contact", validate_assignment=True):
 
     def add_contact(self, new_contact: ContactType):
         if new_contact.name is None:
-            new_contact.name = (
-                f"{new_contact.type}_{len(self.all_contact_interfaces) + 1}"
-            )
+            new_contact.name = f"{new_contact.type}_{len(self.all_contact_interfaces) + 1}"
         self.all_contact_interfaces.append(new_contact)
