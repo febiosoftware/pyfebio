@@ -555,7 +555,7 @@ class ArrudaBoyceUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Arruda-Boyce"] = attr(default="Arruda-Boyce", frozen=True)
     mu: MatPositiveFloat = element(default=MaterialParameter(text=0.09))
     N: MatPositiveFloat = element(default=MaterialParameter(text=26.5))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
 
 
 class EllipsoidalFiberDistributionUC(MaterialBaseNoDensity, tag="solid", extra="forbid"):
@@ -570,7 +570,7 @@ class EllipsoidalFiberDistributionMooneyRivlinUC(MaterialBase, tag="material", e
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=0.0))
     beta: MatStringFloatVec3 = element(default=MaterialParameter(text="4.5,4.5,4.5"))
     ksi: MatStringFloatVec3 = element(default=MaterialParameter(text="1,1,1"))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class EllipsoidalFiberDistributionVerondaWestmannUC(MaterialBase, tag="material", extra="forbid"):
@@ -579,7 +579,7 @@ class EllipsoidalFiberDistributionVerondaWestmannUC(MaterialBase, tag="material"
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=0.5))
     beta: MatStringFloatVec3 = element(default=MaterialParameter(text="4.5,4.5,4.5"))
     ksi: MatStringFloatVec3 = element(default=MaterialParameter(text="1,1,1"))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class FungOrthotropicUC(MaterialBase, tag="material", extra="forbid"):
@@ -594,21 +594,21 @@ class FungOrthotropicUC(MaterialBase, tag="material", extra="forbid"):
     v23: MatPositiveFloat = element(default=MaterialParameter(text=0.87))
     v31: MatPositiveFloat = element(default=MaterialParameter(text=0.26))
     c: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=120000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=120000.0))
 
 
 class GentUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Gent"] = attr(default="Gent", frozen=True)
     G: MatPositiveFloat = element(default=MaterialParameter(text=3.14))
     Jm: MatPositiveFloat = element(default=MaterialParameter(text=1.5))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1e5))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1e5))
 
 
 class HolmesMowUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["uncoupled Holmes-Mow"] = attr(default="uncoupled Holmes-Mow", frozen=True)
     mu: MatPositiveFloat = element(default=MaterialParameter(text=0.5))
     beta: MatPositiveFloat = element(default=MaterialParameter(text=2.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class HolzapfelGasserOgdenUC(MaterialBase, tag="material", extra="forbid"):
@@ -618,7 +618,7 @@ class HolzapfelGasserOgdenUC(MaterialBase, tag="material", extra="forbid"):
     k2: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     gamma: MatLTE_90_GTE_0 = element(default=MaterialParameter(text=45.0))
     kappa: MatLTE_OneThird_GTE_Zero = element(default=MaterialParameter(text=0.1))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
     mat_axis: MaterialAxisVector | None = element(default=None)
     fiber: FiberVector | None = element(default=None)
 
@@ -627,7 +627,7 @@ class MooneyRivlinUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Mooney-Rivlin"] = attr(default="Mooney-Rivlin", frozen=True)
     c1: MatPositiveFloat = element(default=MaterialParameter(text=10.0))
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=1.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class MuscleUC(MaterialBase, tag="material", extra="forbid"):
@@ -639,13 +639,13 @@ class MuscleUC(MaterialBase, tag="material", extra="forbid"):
     smax: MatPositiveFloat = element(default=MaterialParameter(text=3e5))
     Lofl: MatGTOneFloat = element(default=MaterialParameter(text=1.07))
     lam_max: MatGTOneFloat = element(default=MaterialParameter(text=1.4))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1e6))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1e6))
     fiber: FiberVector = element(default=FiberVector())
 
 
 class OgdenUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Ogden"] = attr(default="Ogden", frozen=True)
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
     m1: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     c1: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     m2: MatPositiveFloat | None = element(default=None)
@@ -667,7 +667,7 @@ class TendonUC(MaterialBase, tag="material", extra="forbid"):
     l1: MatPositiveFloat = element(default=MaterialParameter(text=2.7e6))
     l2: MatPositiveFloat = element(default=MaterialParameter(text=46.4))
     lam_max: MatGTOneFloat = element(default=MaterialParameter(text=1.03))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1e7))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1e7))
     fiber: FiberVector = element(default=FiberVector())
 
 
@@ -675,7 +675,7 @@ class TensionCompressionNonlinearOrthoUC(MaterialBase, tag="material", extra="fo
     type: Literal["TC nonlinear orthotropic"] = attr(default="TC nonlinear orthotropic", frozen=True)
     c1: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=0.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100))
     beta: MatStringFloatVec3 = element(default=MaterialParameter(text="4.3,4.3,4.3"))
     ksi: MatStringFloatVec3 = element(default=MaterialParameter(text="4525,4525,4525"))
     mat_axis: MaterialAxisVector = element(default=MaterialAxisVector())
@@ -689,7 +689,7 @@ class TransIsoMooneyRivlinUC(MaterialBase, tag="material", extra="forbid"):
     c4: MatPositiveFloat = element(default=MaterialParameter(text=61.44))
     c5: MatPositiveFloat = element(default=MaterialParameter(text=640.7))
     lam_max: MatGTOneFloat = element(default=MaterialParameter(text=1.03))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
     fiber: FiberVector | None = element(default=None)
     active_contraction: ActiveContraction | None = element(default=None)
 
@@ -702,7 +702,7 @@ class TransIsoVerondaWestmannUC(MaterialBase, tag="material", extra="forbid"):
     c4: MatPositiveFloat = element(default=MaterialParameter(text=61.44))
     c5: MatPositiveFloat = element(default=MaterialParameter(text=640.7))
     lam_max: MatGTOneFloat = element(default=MaterialParameter(text=1.03))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
     fiber: FiberVector | None = element(default=None)
     active_contraction: ActiveContraction | None = element(default=None)
 
@@ -711,7 +711,7 @@ class VerondaWestmannUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Veronda-Westmann"] = attr(default="Veronda-Westmann", frozen=True)
     c1: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=2000.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class MooneyRivlinVonMisesFibersUC(MaterialBase, tag="material", extra="forbid"):
@@ -721,7 +721,7 @@ class MooneyRivlinVonMisesFibersUC(MaterialBase, tag="material", extra="forbid")
     c3: MatPositiveFloat = element(default=MaterialParameter(text=50.0))
     c4: MatPositiveFloat = element(default=MaterialParameter(text=5.0))
     c5: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100000.0))
     kf: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     vmc: MatPositiveFloat = element(default=MaterialParameter(text=2.0))
     var_n: MatPositiveFloat = element(default=MaterialParameter(text=2.0))
@@ -736,7 +736,7 @@ class LeeSacksUC(MaterialBase, tag="material", extra="forbid"):
     c1: MatPositiveFloat = element(default=MaterialParameter(text=0.209))
     c2: MatNonNegativeFloat = element(default=MaterialParameter(text=9.046))
     tangent_scale: MatGTEOneFloat = element(default=MaterialParameter(text=1.0))
-    k: MatPositiveFloat = element(default=MaterialParameter(text=1000.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=1000.0))
 
 
 class Yeoh(MaterialBase, tag="material", extra="forbid"):
@@ -747,7 +747,7 @@ class Yeoh(MaterialBase, tag="material", extra="forbid"):
     c4: MatNonNegativeFloat | None = element(default=None)
     c5: MatNonNegativeFloat | None = element(default=None)
     c6: MatNonNegativeFloat | None = element(default=None)
-    k: MatPositiveFloat = element(default=MaterialParameter(text=100.0))
+    k: MatPositiveFloat | None = element(default=MaterialParameter(text=100.0))
 
 
 UncoupledMaterials: TypeAlias = (
@@ -884,7 +884,7 @@ class FiberEntropyChainUC(BaseXmlModel, tag="solid", extra="forbid"):
     type: str = attr(default="uncoupled fiber-entropy-chain", frozen=True)
     ksi: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     N: MatGTOneFloat = element(default=MaterialParameter(text=2.0))
-    n_term: MatPositiveInt = element(default=MaterialParameter(text=3))
+    n_term: MatPositiveInt = element(default=MaterialParameter(text=4))
     fiber: FiberVector | None = element(default=None)
 
 
@@ -1000,6 +1000,7 @@ class SolidMixture(MaterialBaseNoDensity, tag="material", extra="forbid"):
 class SolidMixtureUC(MaterialBaseNoDensity, tag="material", extra="forbid"):
     type: Literal["solid mixture"] = attr(default="uncoupled solid mixture", frozen=True)
     solid_list: list[UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC] = element(tag="solid", default=[])
+    k: MatPositiveFloat = MaterialParameter(text=1000.0)
 
     def add_solid(self, new_solid: UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC):
         self.solid_list.append(new_solid)

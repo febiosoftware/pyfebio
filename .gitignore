@@ -3,6 +3,7 @@
 *.feb
 *.log
 *.pdf
+notes.md
 # Specific Directories
 src/sandbox/
 jats/

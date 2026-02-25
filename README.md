@@ -278,7 +278,8 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Unconstrained Formulation Materials
   - ✅ Uncoupled Formulation Materials
   - ☑️ Prestrain Material
-  - ✅ Fiber models
+  - ✅ Unconstrained Fiber models
+  - ✅ Uncoupled Fiber models
   - ✅ Material Axis
     - ✅ Vector Definition
     - ✅ Fiber Vector
