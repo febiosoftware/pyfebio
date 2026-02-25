@@ -275,10 +275,10 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ damage
   - ☑️ max variable
 - Material
-  - ✅ Most Unconstrained Formulation Materials
-  - ✅ Most Uncoupled Formulation Materials
+  - ✅ Unconstrained Formulation Materials
+  - ✅ Uncoupled Formulation Materials
   - ☑️ Prestrain Material
-  - ☑️ Fiber models
+  - ✅ Fiber models
   - ✅ Material Axis
     - ✅ Vector Definition
     - ✅ Fiber Vector
@@ -337,11 +337,11 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Biphasic
   - ✅ Sliding2
   - ☑️ Contact Potential Formulation
-  - ☑️ Tie
-    - ☑️ Elastic
-    - ☑️ Facet-Facet
-    - ☑️ Node-Facet
-    - ☑️ Biphasic
+  - ✅ Tie
+    - ✅ Elastic
+    - ✅ Facet-Facet
+    - ✅ Node-Facet
+    - ✅ Biphasic
 - Step
   - ☑️ Multistep Analysis
 - Output
