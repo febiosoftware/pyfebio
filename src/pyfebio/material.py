@@ -831,7 +831,7 @@ class FiberEntropyChain(BaseXmlModel, tag="solid", extra="forbid"):
     type: str = attr(default="fiber-entropy-chain", frozen=True)
     ksi: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     N: MatGTOneFloat = element(default=MaterialParameter(text=2.0))
-    n_term: MatPositiveInt = element(default=MaterialParameter(text=2))
+    n_term: MatPositiveInt = element(default=MaterialParameter(text=3))
     fiber: FiberVector | None = element(default=None)
 
 
@@ -884,7 +884,7 @@ class FiberEntropyChainUC(BaseXmlModel, tag="solid", extra="forbid"):
     type: str = attr(default="uncoupled fiber-entropy-chain", frozen=True)
     ksi: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     N: MatGTOneFloat = element(default=MaterialParameter(text=2.0))
-    n_term: MatPositiveInt = element(default=MaterialParameter(text=2))
+    n_term: MatPositiveInt = element(default=MaterialParameter(text=3))
     fiber: FiberVector | None = element(default=None)
 
 
