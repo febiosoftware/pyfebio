@@ -337,7 +337,7 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Node-Facet
   - ✅ Biphasic
   - ✅ Sliding2
-  - ☑️ Contact Potential Formulation
+  - ✅ Contact Potential Formulation
   - ✅ Tie
     - ✅ Elastic
     - ✅ Facet-Facet
