@@ -55,10 +55,14 @@ class ContactPotential(BaseXmlModel, validate_assignment=True):
     type: Literal["contact potential"] = attr(default="contact potential", frozen=True)
     name: str = attr()
     surface_pair: str = attr()
-    kc: float = element(default=1e-6)
+    kc: float = element(default=1.0e-6)
     p: int = element(default=4)
-    R_in: float = element(default=0.01)
+    check_intersections: Literal[0, 1] = element(default=0)
+    R_in: float = element(default=-0.01)
     R_out: float = element(default=0.05)
+    R0_min: Literal[0] | float = element(default=0)
+    w_tol: Literal[0] | float = element(default=0)
+    integration_rule: Literal["default", "higher-order"] = element(default="default")
 
 
 class SlidingBiphasic(SlidingBase):

@@ -84,6 +84,48 @@ def test_sliding_contact(base_model, tmp_path):
         assert result == 0, f"Failed to run model for {contact_cls.__name__}"
 
 
+def test_contact_potential(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 100
+    my_model.control_.step_size = 0.01
+    my_model.contact_.add_contact(
+        feb.contact.ContactPotential(
+            name="potential_contact",
+            surface_pair="contact",
+            kc=1.0e-6,
+            p=4,
+            check_intersections=1,
+            R_in=0.001,
+            R_out=0.005,
+        )
+    )
+    # stupid hack to give initial separation between contact surfaces
+    # otherwise ContactPotential method throws NaNs
+    bottom_box_top = my_model.mesh_.node_sets[5]
+    for node_id in map(int, bottom_box_top.text.split(",")):
+        coord = list(map(float, my_model.mesh_.nodes[0].all_nodes[node_id - 1].text.split(",")))
+        coord[-1] = coord[-1] - 1e-2
+        my_model.mesh_.nodes[0].all_nodes[node_id - 1] = feb.mesh.Node(id=node_id, text=",".join(map(str, coord)))
+
+    my_model.boundary_.add_bc(
+        feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=-0.15))
+    )
+    # fix horizontal motion to better condition this problem. ContactPotential seems problematic atm
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-left", x_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-right", x_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-front", y_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-back", y_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-left", x_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-right", x_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-front", y_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-back", y_dof=1))
+
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+    my_model.save(tmp_path / "ContactPotential.feb")
+    result = feb.model.run_model(tmp_path / "ContactPotential.feb")
+    assert result == 0, "Failed to run model for ContactPotential"
+
+
 def test_biphasic_sliding_contact(base_biphasic_model, tmp_path):
     for contact_cls in get_args(feb.contact.SlidingBiphasicContactType):
         my_model = deepcopy(base_biphasic_model)
