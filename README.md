@@ -132,11 +132,24 @@ cd /tmp/pytest-of-[USER]/pytest-current/[TEST_FUNCTION_NAME]current
 ## FAQs
 
 - Why are array quantities defined as comma-delimited strings?
-  - `pydantic-xml` serializes `a = element([1, 2])` as 
+  - `pydantic-xml` serializes list element types as follows
+  
+    ```python
+    from pydantic_xml import BaseXmlModel, element
+    
+    class ExampleList(BaseXmlModel):
+        a: list[int] = element(default=[])
+        
+    obj = ExampleList(a=[1, 2])
+    ```
+  
+    as 
   
     ```xml
+    <ExampleList>
         <a>1</a>
         <a>2</a>
+    </ExampleList>
     ```
     
     whereas, FEBio expects `<a>1,2</a>`. The current workaround is to convert the list into a string that is validated vs regex
