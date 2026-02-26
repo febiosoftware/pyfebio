@@ -46,8 +46,10 @@ class ShellDomain(BaseXmlModel, validate_assignment=True):
 
 class BeamDomain(BaseXmlModel, validate_assignment=True):
     name: str = attr(default="BeamPart")
-    type: Literal["linear-truss", "elastic-truss", "linear-beam"]
+    type: Literal["linear-truss", "elastic-truss", "linear-beam"] = attr()
     mat: str = attr(default="material")
+    cross_sectional_area: float | None = element(default=None)
+    v: float | None = element(default=None)
 
 
 class MeshDomains(BaseXmlModel, validate_assignment=True):

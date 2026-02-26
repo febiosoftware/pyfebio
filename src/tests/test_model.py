@@ -21,7 +21,7 @@ def test_tet4_model(tet4_febmesh, tmp_path):
     )
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
     my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"febio4 -i {tmp_path.joinpath('model.feb')}")
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
 
 
@@ -41,7 +41,7 @@ def test_tet10_model(tet10_febmesh, tmp_path):
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
 
     my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"febio4 -i {tmp_path.joinpath('model.feb')}")
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
 
 
@@ -61,7 +61,7 @@ def test_hex8_model(hex8_febmesh, tmp_path):
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
 
     my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"febio4 -i {tmp_path.joinpath('model.feb')}")
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
 
 
@@ -81,7 +81,7 @@ def test_hex20_model(hex20_febmesh, tmp_path):
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
 
     my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"febio4 -i {tmp_path.joinpath('model.feb')}")
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
 
 
@@ -101,5 +101,40 @@ def test_hex27_model(hex27_febmesh, tmp_path):
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
 
     my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"febio4 -i {tmp_path.joinpath('model.feb')}")
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
+    assert result == 0
+
+
+def test_beam2_model(beam2_febmesh, tmp_path):
+    # TODO: we can only test the elastic-truss version which behaves like the linear-truss but can use
+    # FEBio materials
+    my_model = feb.model.Model(mesh_=beam2_febmesh)
+    my_model.material_.add_material(feb.material.NeoHookean(name="truss", id=1))
+    my_model.meshdomains_.add_beam_domain(
+        feb.meshdomains.BeamDomain(type="elastic-truss", name="beam", mat="truss", cross_sectional_area=0.1, v=0.3)
+    )
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="left", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="right", dof="x", value=feb.boundary.Value(lc=1, text="0.5")))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+
+    my_model.save(tmp_path.joinpath("model.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
+    assert result == 0
+
+
+def test_beam3_model(beam3_febmesh, tmp_path):
+    # TODO: we can only test the elastic-truss version which behaves like the linear-truss but can use
+    # FEBio materials
+    # I'm not sure what materials are assigned to the other types. Likewise, there is no quadratic beam domain
+    my_model = feb.model.Model(mesh_=beam3_febmesh)
+    my_model.material_.add_material(feb.material.NeoHookean(name="truss", id=1))
+    my_model.meshdomains_.add_beam_domain(
+        feb.meshdomains.BeamDomain(type="elastic-truss", name="beam", mat="truss", cross_sectional_area=0.1, v=0.3)
+    )
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="left", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="right", dof="x", value=feb.boundary.Value(lc=1, text="0.5")))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+
+    my_model.save(tmp_path.joinpath("model.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0

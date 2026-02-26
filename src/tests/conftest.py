@@ -89,3 +89,25 @@ def hex20_contact_febmesh() -> mesh.Mesh:
 def hex27_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("hex27_contact.msh"))
     return mesh.translate_meshio(mesh_obj)
+
+
+@pytest.fixture(scope="session")
+def beam2_febmesh() -> mesh.Mesh:
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=1, text="0.0,0.0,0.0"), mesh.Node(id=2, text="1.0,0.0,0.0")])])
+    mesh_obj.elements = [mesh.Elements(type="line2", name="beam", all_elements=[mesh.Line2Element(id=1, text="1,2")])]
+    mesh_obj.node_sets = [mesh.NodeSet(name="left", text="1"), mesh.NodeSet(name="right", text="2")]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def beam3_febmesh() -> mesh.Mesh:
+    mesh_obj = mesh.Mesh(
+        nodes=[
+            mesh.Nodes(
+                all_nodes=[mesh.Node(id=1, text="0.0,0.0,0.0"), mesh.Node(id=2, text="0.5,0.0,0.0"), mesh.Node(id=3, text="1.0,0.0,0.0")]
+            )
+        ]
+    )
+    mesh_obj.elements = [mesh.Elements(type="line3", name="beam", all_elements=[mesh.Line3Element(id=1, text="1,3,2")])]
+    mesh_obj.node_sets = [mesh.NodeSet(name="left", text="1"), mesh.NodeSet(name="right", text="3")]
+    return mesh_obj
