@@ -33,6 +33,7 @@ The FEBio development team has helped us develop continuous integration tasks to
 
 - [Installation](#installation)
 - [Testing](#testing)
+- [FAQs](#faqs)
 - [Example](#example)
 - [Documentation](https://febiosoftware.github.io/pyfebio/index.html)
 - [Features](#features)
@@ -127,6 +128,27 @@ on Linux,
 ```bash
 cd /tmp/pytest-of-[USER]/pytest-current/[TEST_FUNCTION_NAME]current
 ```
+
+## FAQs
+
+- Why are array quantities defined as comma-delimited strings?
+  - `pydantic-xml` serializes `a = element([1, 2])` as 
+  
+    ```xml
+        <a>1</a>
+        <a>2</a>
+    ```
+    
+    whereas, FEBio expects `<a>1,2</a>`. The current workaround is to convert the list into a string that is validated vs regex
+    constraints. This is not ideal. There may be a way to have custom (de)serialization functions that do the conversion from list
+    to delimited string instead. It may also be possible to define and XML style sheet via XLST, but I am not so well-versed in XML.
+
+- Why do I need to use the `material.MaterialParameter` class to assign a simple primitive value like `c1=10.0`?
+  - We need to support the option of defining these values as `"map"` or `"math"` as well, which require this class definition. That said, it would preferable to type the parameters as `MaterialParameter | float` with the appropriate primitive type. Unfortunately, `pydantic-xml` does not allow mixing custom class and primitive type definitions, so this is our compromise.
+  
+- Why is there no support for geometry and/or mesh generation?
+  - We want to keep `pyfebio` minimal such that you can use the libraries you prefer for these tasks.
+  - That said, we may add some simple `numpy` based approaches in the future as this is already a dependency.
 
 ## Example
 
