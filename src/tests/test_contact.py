@@ -71,6 +71,34 @@ def base_biphasic_model(hex20_contact_febmesh):
     return my_model
 
 
+@pytest.fixture(scope="module")
+def base_hex20_model(hex20_contact_febmesh):
+    my_model = feb.model.Model(mesh_=hex20_contact_febmesh)
+    for i, part in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(
+            feb.material.NeoHookean(
+                id=i + 1,
+                name=part.name,
+                E=feb.material.MaterialParameter(text=100.0),
+                v=feb.material.MaterialParameter(text=0.1),
+            )
+        )
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=part.name, mat=part.name))
+    my_model.mesh_.add_surface_pair(feb.mesh.SurfacePair(name="contact", primary="bottom-box-top", secondary="top-box-bottom"))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom-box-bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-top", x_dof=1, y_dof=1, z_dof=0))
+    my_model.output_.add_plotfile(
+        feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="displacement"),
+                feb.output.Var(type="contact pressure"),
+                feb.output.Var(type="contact gap"),
+            ]
+        )
+    )
+    return my_model
+
+
 def test_sliding_contact(base_model, tmp_path):
     for contact_cls in get_args(feb.contact.SlidingContactType):
         my_model = deepcopy(base_model)
@@ -84,19 +112,19 @@ def test_sliding_contact(base_model, tmp_path):
         assert result == 0, f"Failed to run model for {contact_cls.__name__}"
 
 
-def test_contact_potential(base_model, tmp_path):
-    my_model = deepcopy(base_model)
+def test_contact_potential(base_hex20_model, tmp_path):
+    my_model = deepcopy(base_hex20_model)
     my_model.control_.time_steps = 100
     my_model.control_.step_size = 0.01
     my_model.contact_.add_contact(
         feb.contact.ContactPotential(
             name="potential_contact",
             surface_pair="contact",
-            kc=1.0e-6,
+            kc=1.0e3,
             p=4,
             check_intersections=1,
-            R_in=0.001,
-            R_out=0.005,
+            R_in=0.005,
+            R_out=0.01,
         )
     )
     # stupid hack to give initial separation between contact surfaces
@@ -108,7 +136,7 @@ def test_contact_potential(base_model, tmp_path):
         my_model.mesh_.nodes[0].all_nodes[node_id - 1] = feb.mesh.Node(id=node_id, text=",".join(map(str, coord)))
 
     my_model.boundary_.add_bc(
-        feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=-0.15))
+        feb.boundary.BCPrescribedDisplacement(node_set="top-box-top", dof="z", value=feb.boundary.Value(lc=1, text=-0.05))
     )
     # fix horizontal motion to better condition this problem. ContactPotential seems problematic atm
     my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-left", x_dof=1))
