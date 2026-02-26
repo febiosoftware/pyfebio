@@ -59,6 +59,12 @@ class Solver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     linear_solver: LinearSolver = element(default=LinearSolver())
 
 
+class ExplicitSolver(BaseXmlModel, validate_assignment=True, skip_empty=True):
+    type: Literal["explicit-solid"] = attr(default="explicit-solid", frozen=True)
+    mass_lumping: Literal[1, 2] = element(default=1)
+    dyn_damping: Literal[1] | float = element(default=1)
+
+
 class Control(BaseXmlModel, tag="Control", validate_assignment=True):
     analysis: Literal["STATIC", "DYNAMIC", "STEADY-STATE", "TRANSIENT"] = element(default="STATIC")
     time_steps: int = element(default=10)
@@ -73,4 +79,4 @@ class Control(BaseXmlModel, tag="Control", validate_assignment=True):
     output_stride: int = element(default=1)
     adaptor_re_solve: int = element(default=1)
     time_stepper: TimeStepper | None = element(default=TimeStepper())
-    solver: Solver = element(default=Solver())
+    solver: Solver | ExplicitSolver = element(default=Solver())
