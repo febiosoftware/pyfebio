@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_xml import BaseXmlModel, attr, element
 
 
@@ -50,6 +51,20 @@ class BeamDomain(BaseXmlModel, validate_assignment=True):
     mat: str = attr(default="material")
     cross_sectional_area: float | None = element(default=None)
     v: float | None = element(default=None)
+
+    @model_validator(mode="after")
+    def validate_material(self):
+        if self.type == "elastic-truss":
+            if self.cross_sectional_area is None:
+                raise ValueError("Cross-sectional area must be specified for elastic-truss domain")
+            if self.v is None:
+                raise ValueError("Poisson ratio (v) must be specified for elastic-truss domain")
+        else:
+            if self.cross_sectional_area is not None:
+                raise ValueError("Cross-sectional area must not be specified when type is not 'elastic-truss'")
+            if self.v is not None:
+                raise ValueError("Poisson ratio (v) must not be specified when type is not 'elastic-truss'")
+        return self
 
 
 class MeshDomains(BaseXmlModel, validate_assignment=True):
