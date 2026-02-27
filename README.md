@@ -277,13 +277,13 @@ Brief overview, see module documentation for more details. Unchecked are not yet
      - tet4, tet10, hex8, hex20, hex27, penta6
   - ☑️ Shell Elements:
      - tri3, tri6, quad4, quad8, quad9, q4ans, q4eas
-  - ☑️ Beam Elements:
+  - ✅ Beam Elements:
      - line2, line3
   - ✅ Node, Element, Surface Sets
 - MeshDomain
   - ✅ Solid Domain
   - ☑️ Shell Domain
-  - ☑️ Beam Domain
+  - ✅ Beam Domain (only "elastic-truss")
   - ☑️ Granular control for integration schemes, etc.
 - MeshData Section
   - ☑️ Node Data
@@ -340,9 +340,9 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Initial Velocity
   - ☑️ Initial Pre-strain
 - Loads
-  - ☑️ Nodal Loads
-  - ☑️ Traction Loads (surface)
-  - ☑️ Pressure Loads (surface)
+  - ✅ Nodal Loads
+  - ✅ Traction Loads (surface)
+  - ✅ Pressure Loads (surface)
   - ☑️ Fluid Flux (surface)
   - ☑️ Fluid Pressure (surface)
 - LoadData

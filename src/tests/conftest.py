@@ -93,9 +93,19 @@ def hex27_contact_febmesh() -> mesh.Mesh:
 
 @pytest.fixture(scope="session")
 def beam2_febmesh() -> mesh.Mesh:
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=1, text="0.0,0.0,0.0"), mesh.Node(id=2, text="1.0,0.0,0.0")])])
-    mesh_obj.elements = [mesh.Elements(type="line2", name="beam", all_elements=[mesh.Line2Element(id=1, text="1,2")])]
-    mesh_obj.node_sets = [mesh.NodeSet(name="left", text="1"), mesh.NodeSet(name="right", text="2")]
+    node_list = [[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [1.0, 0.0, 0.0], [0.25, 1.0, 0.0], [0.75, 1.0, 0.0]]
+    element_list = [[1, 2], [2, 3], [1, 4], [4, 5], [4, 2], [5, 2], [5, 3]]
+    mesh_obj = mesh.Mesh(
+        nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for (i, node) in enumerate(node_list)])]
+    )
+    mesh_obj.elements = [
+        mesh.Elements(
+            type="line2",
+            name="beam",
+            all_elements=[mesh.Line2Element(id=i + 1, text=",".join(map(str, elem))) for i, elem in enumerate(element_list)],
+        )
+    ]
+    mesh_obj.node_sets = [mesh.NodeSet(name="bottom", text="1,2,3"), mesh.NodeSet(name="top", text="4,5")]
     return mesh_obj
 
 
