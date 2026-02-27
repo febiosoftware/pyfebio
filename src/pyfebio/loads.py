@@ -38,7 +38,7 @@ NodalLoadType = NodalLoad | NodalForce | NodalTargetForce
 class FluidFlux(BaseXmlModel, tag="surface_load", validate_assignment=True):
     type: Literal["fluidflux"] = attr(default="fluidflux", frozen=True)
     surface: str = attr()
-    value: Scale = element(default=Scale(lc=1))
+    flux: Scale = element(default=Scale(lc=1, text=0.0001))
     linear: Literal[0, 1] = element(default=0)
     mixture: Literal[0, 1] = element(default=1)
 
@@ -61,7 +61,8 @@ class PressureLoad(BaseXmlModel, tag="surface_load", validate_assignment=True):
 
 class FluidPressure(BaseXmlModel, tag="surface_load", validate_assignment=True):
     type: Literal["fluid pressure"] = attr(default="fluid pressure", frozen=True)
-    pressure: float = element(default=1.0)
+    surface: str = attr()
+    pressure: Scale = element(default=Scale(lc=1, text=0.1))
 
 
 class Loads(BaseXmlModel, validate_assignment=True):

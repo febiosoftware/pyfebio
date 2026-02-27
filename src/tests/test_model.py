@@ -143,6 +143,21 @@ def test_surface_loads(hex20_febmesh, tmp_path):
         assert result == 0, f"{surface_load.__name__} failed"
 
 
+def test_biphasic_surface_loads(hex20_febmesh, tmp_path):
+    for surface_load in (feb.loads.FluidFlux,):
+        my_model = feb.model.BiphasicModel(mesh_=hex20_febmesh)
+        for i, element in enumerate(my_model.mesh_.elements):
+            my_mat = feb.material.BiphasicMaterial(name=element.name, id=i + 1, permeability=feb.material.ConstantIsoPerm())
+            my_model.material_.add_material(my_mat)
+            my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+        my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+        my_model.loads_.add_surface_load(surface_load(surface="top"))
+        my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+        my_model.save(tmp_path.joinpath(f"{surface_load.__name__}.feb"))
+        result = feb.model.run_model(tmp_path.joinpath(f"{surface_load.__name__}.feb"), silent=False)
+        assert result == 0, f"{surface_load.__name__} failed"
+
+
 def test_beam2_model(beam2_febmesh, tmp_path):
     # TODO: we can only test the elastic-truss version which behaves like the linear-truss but can use
     # FEBio materials

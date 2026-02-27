@@ -341,10 +341,14 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Initial Pre-strain
 - Loads
   - ✅ Nodal Loads
-  - ✅ Traction Loads (surface)
-  - ✅ Pressure Loads (surface)
-  - ☑️ Fluid Flux (surface)
-  - ☑️ Fluid Pressure (surface)
+    - ✅ nodal_load
+    - ✅ nodal_force
+    - ✅ nodal_target_force
+    - ☑️ Nodal Fluid Flux
+  - ✅ Surface Loads
+    - ✅ Traction Load
+    - ✅ Pressure Load
+    - ✅ Fluid Flux
 - LoadData
   - ✅ Load Curves
     - ☑️ All Options
