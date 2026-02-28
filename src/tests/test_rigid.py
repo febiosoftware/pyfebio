@@ -1,0 +1,133 @@
+from copy import deepcopy
+
+import pytest
+
+import pyfebio as feb
+
+
+@pytest.fixture(scope="module")
+def base_model(rigid_body_febmesh) -> feb.model.Model:
+    my_model = feb.model.Model(mesh_=rigid_body_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.RigidBody(id=i + 1, name=element.name, center_of_mass="1.0,0.5,4.5"))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
+    return my_model
+
+
+def test_rigid_spherical_joint(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 40
+    my_model.control_.step_size = 0.05
+    my_model.control_.time_stepper = None
+    spherical_joint = feb.rigid.RigidSphericalJoint(
+        name="spherical_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        prescribed_rotation=1,
+        rotation_x=feb.rigid.Value(lc=1, text=1.57),
+        rotation_y=feb.rigid.Value(lc=1, text=1.57),
+        rotation_z=feb.rigid.Value(lc=2, text=6.28),
+    )
+    my_model.rigid_.add_rigid_connector(spherical_joint)
+    my_model.loaddata_.add_math_controller(feb.loaddata.MathController(id=1, math="sin(2*pi*t)"))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=2, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "2.0,1.0"])))
+    model_name = tmp_path / "RigidSphericalJoint.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidSphericalJoint.feb failed to run"
+
+
+def test_rigid_revolute_joint(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 10
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidRevoluteJoint(
+        name="revolute_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        rotation_axis="1.0,0.0,0.0",
+        prescribed_rotation=1,
+        rotation=feb.rigid.Value(lc=1, text=6.28),
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    model_name = tmp_path / "RigidRevoluteJoint.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidRevoluteJoint.feb failed to run"
+
+
+def test_rigid_prismatic_joint(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 10
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidPrismaticJoint(
+        name="revolute_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        translation_axis="1.0,0.0,0.0",
+        transverse_axis="0.0,1.0,0.0",
+        prescribed_translation=1,
+        translation=feb.rigid.Value(lc=1, text=3.0),
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.loaddata_.add_math_controller(feb.loaddata.MathController(id=1, math="sin(2*pi*t)"))
+    model_name = tmp_path / "RigidPrismaticJoint.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidPrismaticJoint.feb failed to run"
+
+
+def test_rigid_cylindrical_joint(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 10
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidCylindricalJoint(
+        name="revolute_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        joint_axis="1.0,0.0,0.0",
+        transverse_axis="0.0,1.0,0.0",
+        prescribed_translation=1,
+        prescribed_rotation=1,
+        rotation=feb.rigid.Value(lc=1, text=1.57),
+        translation=feb.rigid.Value(lc=1, text=3.0),
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.loaddata_.add_math_controller(feb.loaddata.MathController(id=1, math="sin(2*pi*t)"))
+    model_name = tmp_path / "RigidCylindricalJoint.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidCylindricalJoint.feb failed to run"
+
+
+def test_rigid_planar_joint(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 10
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidPlanarJoint(
+        name="revolute_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        rotation_axis="0.0,1.0,0.0",
+        translation_axis_1="1.0,0.0,0.0",
+        prescribed_rotation=1,
+        rotation=feb.rigid.Value(lc=1, text=3 * 6.28),
+        prescribed_translation_1=1,
+        translation_1=feb.rigid.Value(lc=2, text=6.0),
+        prescribed_translation_2=1,
+        translation_2=feb.rigid.Value(lc=3, text=6.0),
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    my_model.loaddata_.add_math_controller(feb.loaddata.MathController(id=2, math="t*cos(6*pi*t)"))
+    my_model.loaddata_.add_math_controller(feb.loaddata.MathController(id=3, math="t*sin(6*pi*t)"))
+    model_name = tmp_path / "RigidCylindricalJoint.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidCylindricalJoint.feb failed to run"

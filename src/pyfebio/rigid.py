@@ -169,6 +169,8 @@ class RigidRevoluteJoint(RigidConnector):
 class RigidPrismaticJoint(RigidConnector):
     type: Literal["rigid prismatic joint"] = attr(default="rigid prismatic joint", frozen=True)
     joint_origin: StringFloatVec3 = element(default="0.0,0.0,0.0")
+    translation_axis: StringFloatVec3 = element(default="1.0,0.0,0.0")
+    transverse_axis: StringFloatVec3 = element(default="0.0,1.0,0.0")
     prescribed_translation: Literal[0, 1] = element(default=0)
     translation: Value | Free = element(default=Free())
     force: Value | Free = element(default=Free())
@@ -193,7 +195,6 @@ class RigidPlanarJoint(RigidConnector):
     joint_origin: StringFloatVec3 = element(default="0.0,0.0,0.0")
     rotation_axis: StringFloatVec3 = element(default="0.0,0.0,0.0")
     translation_axis_1: StringFloatVec3 = element(default="0.0,0.0,0.0")
-    translation_axis_2: StringFloatVec3 = element(default="0.0,0.0,0.0")
     prescribed_rotation: Literal[0, 1] = element(default=0)
     prescribed_translation_1: Literal[0, 1] = element(default=0)
     prescribed_translation_2: Literal[0, 1] = element(default=0)

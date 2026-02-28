@@ -121,3 +121,42 @@ def beam3_febmesh() -> mesh.Mesh:
     mesh_obj.elements = [mesh.Elements(type="line3", name="beam", all_elements=[mesh.Line3Element(id=1, text="1,3,2")])]
     mesh_obj.node_sets = [mesh.NodeSet(name="left", text="1"), mesh.NodeSet(name="right", text="3")]
     return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def rigid_body_febmesh():
+    nodes = [
+        [0.0, 0.0, 0.0],
+        [2.0, 0.0, 0.0],
+        [2.0, 1.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 4.0],
+        [2.0, 0.0, 4.0],
+        [2.0, 1.0, 4.0],
+        [0.0, 1.0, 4.0],
+        [0.0, 0.0, 5.0],
+        [2.0, 0.0, 5.0],
+        [2.0, 1.0, 5.0],
+        [0.0, 1.0, 5.0],
+        [0.0, 0.0, 9.0],
+        [2.0, 0.0, 9.0],
+        [2.0, 1.0, 9.0],
+        [0.0, 1.0, 9.0],
+    ]
+    part1 = [1, 2, 3, 4, 5, 6, 7, 8]
+    part2 = [9, 10, 11, 12, 13, 14, 15, 16]
+
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+
+    mesh_obj.elements = [
+        mesh.Elements(type="hex8", name="bodyA", all_elements=[mesh.Hex8Element(id=1, text=",".join(map(str, part1)))]),
+        mesh.Elements(type="hex8", name="bodyB", all_elements=[mesh.Hex8Element(id=2, text=",".join(map(str, part2)))]),
+    ]
+
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bodyA_top", text="5,6,7,8"),
+        mesh.NodeSet(name="bodyA_bottom", text="1,2,3,4"),
+        mesh.NodeSet(name="bodyB_bottom", text="9,10,11,12"),
+        mesh.NodeSet(name="bodyB_top", text="13,14,15,16"),
+    ]
+    return mesh_obj

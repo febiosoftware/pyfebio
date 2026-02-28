@@ -334,7 +334,17 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Prescribed Displacement and Rotation
   - ☑️ Precribed Rotation about Vector
   - ☑️ Prescribed Euler Rotation
-  - ☑️ All Connectors
+  - ☑️ Connectors
+    - ✅ Spherical Joint
+    - ✅ Revolute Joint
+    - ✅ Prismatic Joint
+    - ✅ Cylindrical Joint
+    - ✅ Planar Joint
+    - ☑️ Lock
+    - ☑️ Spring
+    - ☑️ Damper
+    - ☑️ Angular Damper
+    - ☑️ Contractile Force
   - ☑️ Follower Loads
 - Initial
   - ☑️ Initial Velocity
