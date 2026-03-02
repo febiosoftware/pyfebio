@@ -211,7 +211,7 @@ MatStringFloatVec9: TypeAlias = Annotated[MaterialParameter, AfterValidator(mat_
 class MaterialBase(BaseXmlModel, tag="material", extra="forbid"):
     name: str | None = attr(default=None)
     id: int | None = attr(default=None)
-    density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-9))
+    density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
 
 
 class MaterialBaseNoDensity(BaseXmlModel, tag="solid", extra="forbid"):
