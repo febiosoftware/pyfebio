@@ -8,8 +8,13 @@ from ._types import (
 
 
 class Scale(BaseXmlModel, validate_assignment=True):
-    lc: int = attr()
+    lc: int | None = attr(default=None)
     text: float | StringFloatVec3 = 1.0
+
+
+class ScaleMath(BaseXmlModel, validate_assignment=True):
+    lc: int | None = attr(default=None)
+    text: float | str = 0.0
 
 
 class NodalLoad(BaseXmlModel, tag="nodal_load", validate_assignment=True):
@@ -65,12 +70,55 @@ class FluidPressure(BaseXmlModel, tag="surface_load", validate_assignment=True):
     pressure: Scale = element(default=Scale(lc=1, text=0.1))
 
 
+class ConstantBodyForce(BaseXmlModel, tag="body_load", validate_assignment=True):
+    type: Literal["const"] = attr(default="const", frozen=True)
+    x: Scale = element(default=Scale(text=0.0))
+    y: Scale = element(default=Scale(text=0.0))
+    z: Scale = element(default=Scale(text=9.81))
+
+
+class NonConstantBodyForce(BaseXmlModel, tag="body_load", validate_assignment=True):
+    type: Literal["non-const"] = attr(default="non-const", frozen=True)
+    x: ScaleMath = element(default=ScaleMath(text=0.0))
+    y: ScaleMath = element(default=ScaleMath(text=0.0))
+    z: ScaleMath = element(default=ScaleMath(text="9.81*Z"))
+
+
+class CentrifugalBodyForce(BaseXmlModel, tag="body_load", validate_assignment=True):
+    type: Literal["centrifugal"] = attr(default="centrifugal", frozen=True)
+    angular_speed: float = element(default=0.0)
+    rotation_axis: StringFloatVec3 = element(default="0.0,0.0,1.0")
+    rotation_center: StringFloatVec3 = element(default="0.0,0.0,0.0")
+
+
+class MovingFrame(BaseXmlModel, tag="body_load", validate_assignment=True):
+    type: Literal["moving frame"] = attr(default="moving frame", frozen=True)
+    wx: Scale = element(default=Scale(text=0.0))
+    wy: Scale = element(default=Scale(text=0.0))
+    wz: Scale = element(default=Scale(text=0.0))
+    ax: Scale = element(default=Scale(text=0.0))
+    ay: Scale = element(default=Scale(text=0.0))
+    az: Scale = element(default=Scale(text=0.0))
+
+
+class MassDamping(BaseXmlModel, tag="body_load", validate_assignment=True):
+    type: Literal["mass damping"] = attr(default="mass damping", frozen=True)
+    C: float = element(default=0.0)
+
+
+BodyLoadType = ConstantBodyForce | NonConstantBodyForce | CentrifugalBodyForce | MovingFrame | MassDamping
+
+
 class Loads(BaseXmlModel, validate_assignment=True):
     all_surface_loads: list[TractionLoad | PressureLoad | FluidFlux | FluidPressure] = element(default=[])
     all_nodal_loads: list[NodalLoadType] = element(default=[])
+    all_body_loads: list[BodyLoadType] = element(default=[])
 
     def add_surface_load(self, new_load: PressureLoad | TractionLoad | FluidFlux | FluidPressure):
         self.all_surface_loads.append(new_load)
 
     def add_nodal_load(self, new_load: NodalLoadType):
         self.all_nodal_loads.append(new_load)
+
+    def add_body_load(self, new_load: BodyLoadType):
+        self.all_body_loads.append(new_load)
