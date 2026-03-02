@@ -131,3 +131,48 @@ def test_rigid_planar_joint(base_model, tmp_path):
     model_name = tmp_path / "RigidCylindricalJoint.feb"
     my_model.save(model_name)
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidCylindricalJoint.feb failed to run"
+
+
+def test_rigid_lock(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.time_steps = 1
+    my_model.control_.step_size = 1.0
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidLock(
+        name="lock_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        joint_origin="1.0,0.5,4.5",
+        first_axis="0.0,1.0,0.0",
+        second_axis="1.0,0.0,0.0",
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    model_name = tmp_path / "RigidLock.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=True) == 0, "RigidLock.feb failed to run"
+
+
+def test_rigid_spring(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.solver = feb.control.ExplicitSolver()
+    my_model.control_.analysis = "DYNAMIC"
+    my_model.control_.time_steps = 64
+    my_model.control_.step_size = 1 / 64.0
+    my_model.control_.plot_stride = 8
+    my_model.control_.time_stepper = None
+    joint = feb.rigid.RigidSpring(
+        name="spring_a-b",
+        body_a="bodyA",
+        body_b="bodyB",
+        k=5.053237e-3,
+        insertion_a="1.0,0.5,4.0",
+        insertion_b="1.0,0.5,5.0",
+        free_length=1.5,
+    )
+    my_model.rigid_.add_rigid_connector(joint)
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
+    my_model.loads_.add_body_load(feb.loads.ConstantBodyForce(z=feb.loads.Scale(text=-9.81)))
+    model_name = tmp_path / "RigidSpring.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidSpring.feb failed to run"

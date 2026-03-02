@@ -210,8 +210,11 @@ class RigidLock(RigidConnector):
     second_axis: StringFloatVec3 = element(default="0.0,1.0,0.0")
 
 
-class RigidSpring(RigidConnector):
+class RigidSpring(BaseXmlModel):
     type: Literal["rigid spring"] = attr(default="rigid spring", frozen=True)
+    name: str = attr()
+    body_a: str = element()
+    body_b: str = element()
     k: float = element(default=1)
     insertion_a: StringFloatVec3 = element(default="0.0,0.0,0.0")
     insertion_b: StringFloatVec3 = element(default="1.0,0.0,0.0")
