@@ -359,6 +359,17 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Traction Load
     - ✅ Pressure Load
     - ✅ Fluid Flux
+  - ✅ Body Loads
+    - ✅ Constant Body Force
+    - ✅ Non-Constant Body Force
+    - ✅ Centrifugal Body Force
+    - ✅ Moving Frame
+    - ✅ Mass Damping
+    - ❌ Heat Source
+    - ❌ Surface Attraction
+    - ❌ Fluid Centrifugal Force
+    - ❌ Fluid Moving Frame
+    
 - LoadData
   - ✅ Load Curves
     - ☑️ All Options
