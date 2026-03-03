@@ -175,6 +175,18 @@ class Surface(BaseXmlModel, tag="Surface", validate_assignment=True):
         self.all_quad9.append(new_quad)
 
 
+class Edge(BaseXmlModel, tag="Edge", validate_assignment=True):
+    name: str = attr(default="")
+    all_line2: list[Line2Element] = element(default=[], tag="line2")
+    all_line3: list[Line3Element] = element(default=[], tag="line3")
+
+    def add_line2(self, new_line2: Line2Element):
+        self.all_line2.append(new_line2)
+
+    def add_line3(self, new_line3: Line3Element):
+        self.all_line3.append(new_line3)
+
+
 class SurfacePair(BaseXmlModel, tag="SurfacePair", validate_assignment=True):
     name: str = attr(default="")
     primary: str = element()
@@ -197,6 +209,7 @@ class Mesh(BaseXmlModel, validate_assignment=True):
     nodes: list[Nodes] = element(default=[], tag="Nodes")
     elements: list[Elements] = element(default=[], tag="Elements")
     surfaces: list[Surface] = element(default=[], tag="Surface")
+    edges: list[Edge] = element(default=[], tag="Edge")
     element_sets: list[ElementSet] = element(default=[], tag="ElementSet")
     node_sets: list[NodeSet] = element(default=[], tag="NodeSet")
     discrete_sets: list[DiscreteSet] = element(default=[], tag="DiscreteSet")
@@ -216,6 +229,11 @@ class Mesh(BaseXmlModel, validate_assignment=True):
         if not new_surface.name:
             new_surface.name = f"Surface{len(self.surfaces) + 1}"
         self.surfaces.append(new_surface)
+
+    def add_edge(self, new_edge: Edge):
+        if not new_edge.name:
+            new_edge.name = f"Edge{len(self.edges) + 1}"
+        self.edges.append(new_edge)
 
     def add_element_set(self, new_element_set: ElementSet):
         if not new_element_set.name:
