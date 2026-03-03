@@ -274,11 +274,23 @@ Brief overview, see module documentation for more details. Unchecked are not yet
 - Mesh Section
   - ✅ Nodes
   - ✅ Solid Elements:
-     - tet4, tet10, hex8, hex20, hex27, penta6
+    - ✅ tet4
+    - ✅ tet10
+    - ✅ hex8
+    - ✅ hex20
+    - ✅ hex27
+    - ☑️ penta6
   - ☑️ Shell Elements:
-     - tri3, tri6, quad4, quad8, quad9, q4ans, q4eas
+    - ✅ tri3
+    - ☑️ tri6
+    - ✅ quad4
+    - ✅ quad8
+    - ☑️ quad9 (bugged?)
+    - ☑️ q4ans
+    - ☑️ q4eas
   - ✅ Beam Elements:
-     - line2, line3
+    - ✅ line2
+    - ✅ line3
   - ✅ Node, Element, Surface Sets
 - MeshDomain
   - ✅ Solid Domain
@@ -340,8 +352,8 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Prismatic Joint
     - ✅ Cylindrical Joint
     - ✅ Planar Joint
-    - ☑️ Lock
-    - ☑️ Spring
+    - ✅ Lock
+    - ✅ Spring
     - ☑️ Damper
     - ☑️ Angular Damper
     - ☑️ Contractile Force
@@ -374,7 +386,7 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Load Curves
     - ☑️ All Options
   - ☑️ PID Controllers
-  - ☑️ Math Controllers
+  - ✅ Math Controllers
 - Boundary
   - ✅ Fixed Displacement (solid)
   - ✅ Prescribed Displacement (solid)
