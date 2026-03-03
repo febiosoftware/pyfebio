@@ -160,3 +160,138 @@ def rigid_body_febmesh():
         mesh.NodeSet(name="bodyB_top", text="13,14,15,16"),
     ]
     return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def shell_tri3():
+    nodes = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0]]
+    elements = [[1, 2, 3], [2, 4, 3]]
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj.elements = [
+        mesh.Elements(
+            type="tri3", all_elements=[mesh.Tri3Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
+        )
+    ]
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bottom", text="1,2"),
+        mesh.NodeSet(name="top", text="3,4"),
+        mesh.NodeSet(name="left", text="1,3"),
+        mesh.NodeSet(name="right", text="2,4"),
+        mesh.NodeSet(name="bottom-left", text="1"),
+        mesh.NodeSet(name="bottom-right", text="2"),
+        mesh.NodeSet(name="top-right", text="4"),
+        mesh.NodeSet(name="top-left", text="3"),
+    ]
+    mesh_obj.edges = [
+        mesh.Edge(name="bottom", all_line2=[mesh.Line2Element(id=1, text="1,2")]),
+        mesh.Edge(name="top", all_line2=[mesh.Line2Element(id=2, text="4,3")]),
+        mesh.Edge(name="left", all_line2=[mesh.Line2Element(id=3, text="3,1")]),
+        mesh.Edge(name="right", all_line2=[mesh.Line2Element(id=4, text="2,4")]),
+    ]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def shell_quad4():
+    nodes = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0], [0.0, 0.0, 1.0]]
+    elements = [[1, 2, 3, 4]]
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj.elements = [
+        mesh.Elements(
+            type="quad4", all_elements=[mesh.Quad4Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
+        )
+    ]
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bottom", text="1,2"),
+        mesh.NodeSet(name="top", text="3,4"),
+        mesh.NodeSet(name="left", text="1,4"),
+        mesh.NodeSet(name="right", text="2,3"),
+        mesh.NodeSet(name="bottom-left", text="1"),
+        mesh.NodeSet(name="bottom-right", text="2"),
+        mesh.NodeSet(name="top-right", text="3"),
+        mesh.NodeSet(name="top-left", text="4"),
+    ]
+    mesh_obj.edges = [
+        mesh.Edge(name="bottom", all_line2=[mesh.Line2Element(id=1, text="1,2")]),
+        mesh.Edge(name="top", all_line2=[mesh.Line2Element(id=2, text="3,4")]),
+        mesh.Edge(name="left", all_line2=[mesh.Line2Element(id=3, text="4,1")]),
+        mesh.Edge(name="right", all_line2=[mesh.Line2Element(id=4, text="2,3")]),
+    ]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def shell_quad8():
+    nodes = [
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0],
+        [0.5, 0.0, 0.0],
+        [1.0, 0.0, 0.5],
+        [0.5, 0.0, 1.0],
+        [0.0, 0.0, 0.5],
+    ]
+    elements = [[1, 2, 3, 4, 5, 6, 7, 8]]
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj.elements = [
+        mesh.Elements(
+            type="quad8", all_elements=[mesh.Quad8Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
+        )
+    ]
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bottom", text="1,2,5"),
+        mesh.NodeSet(name="top", text="3,4,7"),
+        mesh.NodeSet(name="left", text="1,4,8"),
+        mesh.NodeSet(name="right", text="2,3,6"),
+        mesh.NodeSet(name="bottom-left", text="1"),
+        mesh.NodeSet(name="bottom-right", text="2"),
+        mesh.NodeSet(name="top-right", text="3"),
+        mesh.NodeSet(name="top-left", text="4"),
+    ]
+    mesh_obj.edges = [
+        mesh.Edge(name="bottom", all_line3=[mesh.Line3Element(id=1, text="1,2,5")]),
+        mesh.Edge(name="top", all_line3=[mesh.Line3Element(id=2, text="3,4,7")]),
+        mesh.Edge(name="left", all_line3=[mesh.Line3Element(id=3, text="4,1,8")]),
+        mesh.Edge(name="right", all_line3=[mesh.Line3Element(id=4, text="2,3,6")]),
+    ]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def shell_quad9():
+    nodes = [
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0],
+        [0.5, 0.0, 0.0],
+        [1.0, 0.0, 0.5],
+        [0.5, 0.0, 1.0],
+        [0.0, 0.0, 0.5],
+        [0.5, 0.0, 0.5],
+    ]
+    elements = [[1, 2, 3, 4, 5, 6, 7, 8, 9]]
+    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj.elements = [
+        mesh.Elements(
+            type="quad9", all_elements=[mesh.Quad9Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
+        )
+    ]
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bottom", text="1,2,5"),
+        mesh.NodeSet(name="top", text="3,4,7"),
+        mesh.NodeSet(name="left", text="1,4,8"),
+        mesh.NodeSet(name="right", text="2,3,6"),
+        mesh.NodeSet(name="bottom-left", text="1"),
+        mesh.NodeSet(name="bottom-right", text="2"),
+        mesh.NodeSet(name="top-right", text="3"),
+        mesh.NodeSet(name="top-left", text="4"),
+    ]
+    mesh_obj.edges = [
+        mesh.Edge(name="bottom", all_line3=[mesh.Line3Element(id=1, text="1,2,5")]),
+        mesh.Edge(name="top", all_line3=[mesh.Line3Element(id=2, text="3,4,7")]),
+        mesh.Edge(name="left", all_line3=[mesh.Line3Element(id=3, text="4,1,8")]),
+        mesh.Edge(name="right", all_line3=[mesh.Line3Element(id=4, text="2,3,6")]),
+    ]
+    return mesh_obj
