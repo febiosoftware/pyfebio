@@ -285,7 +285,6 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ☑️ tri6
     - ✅ quad4
     - ✅ quad8
-    - ☑️ quad9 (bugged?)
     - ✅️ q4ans
     - ✅ q4eas
   - ✅ Beam Elements:
