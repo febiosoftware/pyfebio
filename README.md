@@ -282,7 +282,7 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ☑️ penta6
   - ☑️ Shell Elements:
     - ✅ tri3
-    - ☑️ tri6
+    - ✅ tri6
     - ✅ quad4
     - ✅ quad8
     - ✅️ q4ans
