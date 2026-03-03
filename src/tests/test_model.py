@@ -125,22 +125,26 @@ def test_tri3_model(shell_tri3, tmp_path):
 
 
 def test_quad4_model(shell_quad4, tmp_path):
-    my_model = feb.model.Model(mesh_=shell_quad4)
-    for i, element in enumerate(my_model.mesh_.elements):
-        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
-        my_model.meshdomains_.add_shell_domain(feb.meshdomains.ShellDomain(name=element.name, mat=element.name, shell_thickness=0.1))
-    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
-    my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="top-left", dof="y", value=feb.boundary.Value(lc=1, text=0.5)))
-    my_model.boundary_.add_bc(
-        feb.boundary.BCPrescribedDisplacement(node_set="top-right", dof="y", value=feb.boundary.Value(lc=1, text=-0.5))
-    )
-    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
-    my_model.output_.add_plotfile(
-        feb.output.OutputPlotfile(all_vars=[feb.output.Var(type="shell strain"), feb.output.Var(type="displacement")])
-    )
-    my_model.save(tmp_path.joinpath("model.feb"))
-    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}", silent=False)
-    assert result == 0, "Quad4 shell model failed"
+    for etype, displacement in zip(("quad4", "q4ans", "q4eas"), (0.2, 0.01, 0.2)):
+        my_model = feb.model.Model(mesh_=shell_quad4)
+        for i, element in enumerate(my_model.mesh_.elements):
+            element.type = etype
+            my_model.material_.add_material(feb.material.MooneyRivlinUC(name=element.name, id=i + 1))
+            my_model.meshdomains_.add_shell_domain(feb.meshdomains.ShellDomain(name=element.name, mat=element.name, shell_thickness=0.1))
+        my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+        my_model.boundary_.add_bc(
+            feb.boundary.BCPrescribedDisplacement(node_set="top-left", dof="y", value=feb.boundary.Value(lc=1, text=displacement))
+        )
+        my_model.boundary_.add_bc(
+            feb.boundary.BCPrescribedDisplacement(node_set="top-right", dof="y", value=feb.boundary.Value(lc=1, text=-displacement))
+        )
+        my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+        my_model.output_.add_plotfile(
+            feb.output.OutputPlotfile(all_vars=[feb.output.Var(type="shell strain"), feb.output.Var(type="displacement")])
+        )
+        my_model.save(tmp_path.joinpath(f"{etype}.feb"))
+        result = feb.model.run_model(f"{tmp_path.joinpath(etype)}.feb", silent=False)
+        assert result == 0, f"{etype} shell model failed"
 
 
 def test_quad8_model(shell_quad8, tmp_path):

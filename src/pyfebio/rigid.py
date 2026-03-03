@@ -8,7 +8,7 @@ from ._types import (
 
 
 class Value(BaseXmlModel, validate_assignment=True):
-    lc: int = attr()
+    lc: int | None = attr(default=None)
     text: float = 1.0
 
 
@@ -161,7 +161,8 @@ class RigidRevoluteJoint(RigidConnector):
     laugon: Literal[0, 1] = element(default=0)
     joint_origin: StringFloatVec3 = element(default="0.0,0.0,0.0")
     prescribed_rotation: Literal[0, 1] = element(default=0)
-    rotation_axis: StringFloatVec3 = element(default="0.0,0.0,1.0")
+    rotation_axis: StringFloatVec3 = element(default="1.0,0.0,0.0")
+    transverse_axis: StringFloatVec3 = element(default="0.0,1.0,0.0")
     moment: Value | Free = element(default=Free())
     rotation: Value | Free = element(default=Free())
 
@@ -210,7 +211,7 @@ class RigidLock(RigidConnector):
     second_axis: StringFloatVec3 = element(default="0.0,1.0,0.0")
 
 
-class RigidSpring(BaseXmlModel):
+class RigidSpring(BaseXmlModel, tag="rigid_connector", validate_assignment=True):
     type: Literal["rigid spring"] = attr(default="rigid spring", frozen=True)
     name: str = attr()
     body_a: str = element()
@@ -221,20 +222,29 @@ class RigidSpring(BaseXmlModel):
     free_length: Literal[0] | float = element(default=0)
 
 
-class RigidDamper(RigidConnector):
+class RigidDamper(BaseXmlModel, tag="rigid_connector", validate_assignment=True):
     type: Literal["rigid damper"] = attr(default="rigid damper", frozen=True)
+    name: str = attr()
+    body_a: str = element()
+    body_b: str = element()
     c: float = element(default=1e-7)
     insertion_a: StringFloatVec3 = element(default="0.0,0.0,0.0")
     insertion_b: StringFloatVec3 = element(default="1.0,0.0,0.0")
 
 
-class RigidAngularDamper(RigidConnector):
+class RigidAngularDamper(BaseXmlModel, tag="rigid_connector", validate_assignment=True):
     type: Literal["rigid angular damper"] = attr(default="rigid angular damper", frozen=True)
+    name: str = attr()
+    body_a: str = element()
+    body_b: str = element()
     c: float = element(default=1e-7)
 
 
-class RigidContractileForce(RigidConnector):
-    type: Literal["rigid damper"] = attr(default="rigid damper", frozen=True)
+class RigidContractileForce(BaseXmlModel, tag="rigid_connector", validate_assignment=True):
+    type: Literal["rigid contractile force"] = attr(default="rigid contractile force", frozen=True)
+    name: str = attr()
+    body_a: str = element()
+    body_b: str = element()
     insertion_a: StringFloatVec3 = element(default="0.0,0.0,0.0")
     insertion_b: StringFloatVec3 = element(default="1.0,0.0,0.0")
     f0: Value = element()
