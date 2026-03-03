@@ -33,14 +33,17 @@ class SolidDomain(BaseXmlModel, validate_assignment=True):
 
 class ShellDomain(BaseXmlModel, validate_assignment=True):
     name: str = attr(default="ShellPart")
-    type: Literal[
-        "elastic-shell",
-        "three-field-shell",
-        "rigid-shell",
-        "elastic-shell-old",
-        "elastic-shell-eas",
-        "elastic-shell-ans",
-    ] = attr(default="elastic-shell")
+    type: (
+        Literal[
+            "elastic-shell",
+            "three-field-shell",
+            "rigid-shell",
+            "elastic-shell-old",
+            "elastic-shell-eas",
+            "elastic-shell-ans",
+        ]
+        | None
+    ) = attr(default=None)
     mat: str = attr(default="material")
     shell_thickness: float = element(default=0.01)
 
