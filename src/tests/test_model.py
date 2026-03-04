@@ -233,3 +233,24 @@ def test_beam3_model(beam3_febmesh, tmp_path):
     my_model.save(tmp_path.joinpath("model.feb"))
     result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
+
+
+def test_rigid_fixed_bc(hex20_contact_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=hex20_contact_febmesh)
+    rigid_material = feb.material.RigidBody(name="bodyA", id=1)
+    deformable_material = feb.material.NeoHookean(name="deformableBody", id=2)
+    for part, mat in zip(my_model.mesh_.elements, (rigid_material, deformable_material)):
+        my_model.material_.add_material(mat)
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=f"{part.name}", mat=f"{mat.name}"))
+
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top-box-top", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCRigid(node_set="top-box-bottom", rb="bodyA"))
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyA", dof="Rw", value=feb.rigid.Value(lc=1, text=1.57))
+    )
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=1, Rv_dof=1))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+
+    my_model.save(tmp_path.joinpath("model.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
+    assert result == 0
