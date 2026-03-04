@@ -2,6 +2,7 @@ from pathlib import Path
 
 import meshio
 import pytest
+from numpy import cos, linspace, pi, sin
 
 from pyfebio import mesh
 
@@ -89,6 +90,36 @@ def hex20_contact_febmesh() -> mesh.Mesh:
 def hex27_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("hex27_contact.msh"))
     return mesh.translate_meshio(mesh_obj)
+
+
+@pytest.fixture(scope="session")
+def penta6_febmesh() -> mesh.Mesh:
+    theta = linspace(0.0, 2 * pi, 8)
+    x = cos(theta)
+    y = sin(theta)
+    nodes = [mesh.Node(id=i + 1, text=",".join(map(str, [x[i], y[i], 0.0]))) for i in range(len(x) - 1)]
+    nodes += [mesh.Node(id=i + len(x), text=",".join(map(str, [x[i], y[i], 1.0]))) for i in range(len(x) - 1)]
+    nodes += [mesh.Node(id=len(nodes) + 1, text="0.0,0.0,0.0"), mesh.Node(id=len(nodes) + 2, text="0.0,0.0,1.0")]
+
+    elements = [
+        [15, 1, 2, 16, 8, 9],
+        [15, 2, 3, 16, 9, 10],
+        [15, 3, 4, 16, 10, 11],
+        [15, 4, 5, 16, 11, 12],
+        [15, 5, 6, 16, 12, 13],
+        [15, 6, 7, 16, 13, 14],
+        [15, 7, 1, 16, 14, 8],
+    ]
+    elements = [mesh.Penta6Element(id=i + 1, text=",".join(map(str, elem))) for i, elem in enumerate(elements)]
+    mesh_obj = mesh.Mesh(
+        nodes=[mesh.Nodes(all_nodes=nodes)],
+        elements=[mesh.Elements(name="penta_mesh", type="penta6", all_elements=elements)],  # type:ignore
+    )
+    mesh_obj.node_sets = [
+        mesh.NodeSet(name="bottom", text="1,2,3,4,5,6,7,15"),
+        mesh.NodeSet(name="top", text="8,9,10,11,12,13,14,16"),
+    ]
+    return mesh_obj
 
 
 @pytest.fixture(scope="session")

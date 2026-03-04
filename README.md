@@ -279,8 +279,8 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ hex8
     - ✅ hex20
     - ✅ hex27
-    - ☑️ penta6
-  - ☑️ Shell Elements:
+    - ✅ penta6
+  - ✅ Shell Elements:
     - ✅ tri3
     - ✅ tri6
     - ✅ quad4
