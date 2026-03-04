@@ -276,10 +276,13 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Solid Elements:
     - ✅ tet4
     - ✅ tet10
+    - ❌ tet15
     - ✅ hex8
     - ✅ hex20
     - ✅ hex27
     - ✅ penta6
+    - ❌ penta15
+    - ❌ pyra5
   - ✅ Shell Elements:
     - ✅ tri3
     - ✅ tri6
@@ -341,11 +344,12 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ❌ Damage Materials
   - ❌ First-order Homogenization
 - Rigid
-  - ☑️ Fixed Displacement and Rotation
-  - ☑️ Prescribed Displacement and Rotation
-  - ☑️ Precribed Rotation about Vector
-  - ☑️ Prescribed Euler Rotation
-  - ☑️ Connectors
+  - ✅ Constraints
+    - ✅ Fixed Displacement and Rotation
+    - ✅ Prescribed Displacement and Rotation
+    - ✅ Precribed Rotation about Vector
+    - ✅ Prescribed Euler Rotation
+  - ✅ Connectors
     - ✅ Spherical Joint
     - ✅ Revolute Joint
     - ✅ Prismatic Joint
@@ -356,7 +360,15 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Damper
     - ✅ Angular Damper
     - ✅ Contractile Force
-  - ☑️ Follower Loads
+  - ☑️ Loads
+    - ☑️ Force
+    - ☑️ Moment
+    - ☑️ Follower Force
+    - ☑️ Follower Moment
+    - ☑️ Cable Load
+  - ☑️ Initial Conditions
+    - ☑️ Initial Velocity
+    - ☑️ Initial Angular Velocity
 - Initial
   - ☑️ Initial Velocity
   - ☑️ Initial Pre-strain
@@ -389,11 +401,11 @@ Brief overview, see module documentation for more details. Unchecked are not yet
 - Boundary
   - ✅ Fixed Displacement (solid)
   - ✅ Prescribed Displacement (solid)
-  - ☑️ Fixed Displacement (shell)
-  - ☑️ Prescribed Displacement (shell)
+  - ✅ Fixed Displacement (shell)
+  - ✅️ Prescribed Displacement (shell)
   - ☑️ Precribed Deformation Gradient
   - ☑️ Displacement Along Normals
-  - ☑️ Fix to Rigid Body
+  - ✅️ Fix to Rigid Body
   - ✅ Rigid Node Set Deformation (rotation about axis)
   - ✅ Zero Fluid Pressure
   - ☑️ Prescribed Fluid Pressure
