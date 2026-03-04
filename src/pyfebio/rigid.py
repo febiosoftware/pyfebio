@@ -66,7 +66,7 @@ class RigidBodyEulerAngle(BaseXmlModel, tag="rigid_bc", validate_assignment=True
         lc: int = attr()
         text: float = 0.0
 
-    type: Literal["rigid_euler_vector"] = attr(default="rigid_euler_vector", frozen=True)
+    type: Literal["rigid_euler_angles"] = attr(default="rigid_euler_angles", frozen=True)
     rb: str = element()
     Ex: X = element()
     Ey: Y = element()
