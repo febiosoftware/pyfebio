@@ -78,7 +78,7 @@ class RigidForceLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
     rb: str = element()
     dof: Literal["Rx", "Ry", "Rz"] = element()
     relative: Literal[0, 1] = element(default=0)
-    load_type: Literal[0, 1, 2] = element(default=1)
+    load_type: Literal[0, 1, 2] = element(default=0)
     value: Value = element()
 
 
@@ -101,7 +101,6 @@ class RigidMomentLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
 class RigidFollowerMomentLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
     type: Literal["rigid_follower_moment"] = attr(default="rigid_follower_moment", frozen=True)
     rb: str = element()
-    relative: Literal[0, 1] = element(default=0)
     moment: StringFloatVec3 = element()
 
 
@@ -252,7 +251,7 @@ class RigidContractileForce(BaseXmlModel, tag="rigid_connector", validate_assign
 
 RigidBCType = RigidFixed | RigidPrescribed | RigidBodyRotationVector | RigidBodyEulerAngle
 
-RigidLoadType = RigidForceLoad | RigidFollowerForceLoad | RigidMomentLoad | RigidFollowerMomentLoad
+RigidLoadType = RigidForceLoad | RigidFollowerForceLoad | RigidMomentLoad | RigidFollowerMomentLoad | RigidCableLoad
 
 RigidConnectorType = (
     RigidSphericalJoint

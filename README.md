@@ -360,12 +360,12 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Damper
     - ✅ Angular Damper
     - ✅ Contractile Force
-  - ☑️ Loads
-    - ☑️ Force
-    - ☑️ Moment
-    - ☑️ Follower Force
-    - ☑️ Follower Moment
-    - ☑️ Cable Load
+  - ✅ Loads
+    - ✅ Force
+    - ✅ Moment
+    - ✅ Follower Force
+    - ✅ Follower Moment
+    - ✅ Cable Load
   - ☑️ Initial Conditions
     - ☑️ Initial Velocity
     - ☑️ Initial Angular Velocity
@@ -430,10 +430,10 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Multistep Analysis
 - Output
   - ☑️ Log File Configuration
-  - ☑️ Plot File Configuration
-  - ☑️ Node Variables
-  - ☑️ Element Variables
-  - ☑️ Rigid Body Variables
+  - ✅ Plot File Configuration
+  - ✅ Node Variables
+  - ✅ Element Variables
+  - ✅ Rigid Body Variables
   - ☑️ Rigid Connector Variables
 - XPLT
   - ✅ Convert XPLT to HDF5

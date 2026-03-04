@@ -311,8 +311,134 @@ def test_rigid_contractile_force(base_model, tmp_path):
         insertion_b="1.0,0.5,5.0",
     )
     my_model.rigid_.add_rigid_connector(joint)
-    # my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
     my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
     model_name = tmp_path / "RigidContractileForce.feb"
     my_model.save(model_name)
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidContractileForce.feb failed to run"
+
+
+def test_rigid_force(base_model, tmp_path):
+    for load_type in (0, 1, 2):
+        my_model = deepcopy(base_model)
+        my_model.control_.analysis = "DYNAMIC"
+        my_model.control_.time_steps = 10
+        my_model.control_.step_size = 0.1
+        my_model.control_.time_stepper = None
+        rotx = feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Ru", value=feb.rigid.Value(lc=1, text=0.735))
+        roty = feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Rv", value=feb.rigid.Value(lc=1, text=0.0))
+        rotz = feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Rw", value=feb.rigid.Value(lc=1, text=0.0))
+        loady = feb.rigid.RigidForceLoad(rb="bodyB", dof="Ry", load_type=load_type, value=feb.rigid.Value(text=1.0e-4))
+        my_model.rigid_.add_rigid_bc(rotx)
+        my_model.rigid_.add_rigid_bc(roty)
+        my_model.rigid_.add_rigid_bc(rotz)
+        my_model.rigid_.add_rigid_load(loady)
+        my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+        outputs = feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="rigid velocity"),
+                feb.output.Var(type="displacement"),
+                feb.output.Var(type="rigid acceleration"),
+            ]
+        )
+        my_model.output_.add_plotfile(outputs)
+        model_name = tmp_path / f"RigidForceType{load_type}.feb"
+        my_model.save(model_name)
+        assert feb.model.run_model(model_name, silent=False) == 0, f"RigidForceType{load_type}.feb failed to run"
+
+
+def test_rigid_moment(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.analysis = "DYNAMIC"
+    my_model.control_.time_steps = 20
+    my_model.control_.step_size = 0.5
+    my_model.control_.time_stepper = None
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
+    my_model.rigid_.add_rigid_load(feb.rigid.RigidMomentLoad(rb="bodyB", dof="Ru", value=feb.rigid.Value(text=1.0e-3)))
+    outputs = feb.output.OutputPlotfile(
+        all_vars=[
+            feb.output.Var(type="rigid angular velocity"),
+            feb.output.Var(type="displacement"),
+        ]
+    )
+    my_model.output_.add_plotfile(outputs)
+    model_name = tmp_path / "RigidMoment.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidMoment.feb failed to run"
+
+
+def test_rigid_cable_load(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.analysis = "DYNAMIC"
+    my_model.control_.time_steps = 20
+    my_model.control_.step_size = 0.05
+    my_model.control_.time_stepper = None
+    my_model.rigid_.all_rigid_bcs = []
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
+    my_model.rigid_.add_rigid_load(
+        feb.rigid.RigidCableLoad(
+            force_direction="0.0,1.0,0.0",
+            relative=0,
+            force=feb.rigid.Value(text=1.0e-3),
+            rigid_cable_point=[
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyA", position="1.0,1.0,0.0"),
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyA", position="1.0,1.0,4.0"),
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyB", position="1.0,1.0,5.0"),
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyB", position="1.0,1.0,9.0"),
+            ],
+        )
+    )
+    outputs = feb.output.OutputPlotfile(
+        all_vars=[
+            feb.output.Var(type="rigid angular velocity"),
+            feb.output.Var(type="displacement"),
+        ]
+    )
+    my_model.output_.add_plotfile(outputs)
+    model_name = tmp_path / "RigidCableLoad.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidCableLoad.feb failed to run"
+
+
+def test_rigid_follower_moment(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.analysis = "DYNAMIC"
+    my_model.control_.time_steps = 100
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=0, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidPrescribed(type="rigid_displacement", rb="bodyB", dof="y", value=feb.rigid.Value(lc=1, text=3.0))
+    )
+    follower_moment = feb.rigid.RigidFollowerMomentLoad(rb="bodyB", moment="1.0e-3,0.0,0.0")
+    my_model.rigid_.add_rigid_load(follower_moment)
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "10.0,1.0"])))
+    outputs = feb.output.OutputPlotfile(
+        all_vars=[feb.output.Var(type="rigid angular velocity"), feb.output.Var(type="displacement"), feb.output.Var(type="rigid torque")]
+    )
+    my_model.output_.add_plotfile(outputs)
+    model_name = tmp_path / "RigidFollowerMoment.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidFollowerMoment.feb failed to run"
+
+
+def test_rigid_follower_force(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.control_.analysis = "DYNAMIC"
+    my_model.control_.time_steps = 100
+    my_model.control_.step_size = 0.1
+    my_model.control_.time_stepper = None
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
+    follower_moment = feb.rigid.RigidFollowerForceLoad(rb="bodyB", insertion="1.0,0.5,9.0", force="0.0,-1.0e-4,0.0")
+    my_model.rigid_.add_rigid_load(follower_moment)
+    outputs = feb.output.OutputPlotfile(
+        all_vars=[
+            feb.output.Var(type="rigid angular velocity"),
+            feb.output.Var(type="displacement"),
+            feb.output.Var(type="rigid torque"),
+        ]
+    )
+    my_model.output_.add_plotfile(outputs)
+    model_name = tmp_path / "RigidFollowerForce.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidFollowerForce.feb failed to run"
