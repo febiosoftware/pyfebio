@@ -15,10 +15,62 @@ def base_model(rigid_body_febmesh) -> feb.model.Model:
     return my_model
 
 
+def test_prescribed_displacement_rotation(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Ru", value=feb.rigid.Value(lc=1, text=0.7535))
+    )
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Rv", value=feb.rigid.Value(lc=1, text=0.7535))
+    )
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Rw", value=feb.rigid.Value(lc=1, text=0.7535))
+    )
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidPrescribed(rb="bodyB", dof="x", value=feb.rigid.Value(lc=1, text=1.0)))
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidPrescribed(rb="bodyB", dof="y", value=feb.rigid.Value(lc=1, text=1.0)))
+    my_model.rigid_.add_rigid_bc(feb.rigid.RigidPrescribed(rb="bodyB", dof="z", value=feb.rigid.Value(lc=1, text=1.0)))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    model_name = tmp_path / "RigidPrescribedDisplacementRotation.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidPrescribedDisplacementRotation.feb failed to run"
+
+
+def test_prescribed_rotation_about_vector(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidBodyRotationVector(
+            rb="bodyB",
+            vx=feb.rigid.RigidBodyRotationVector.X(lc=1, text=0.0),
+            vy=feb.rigid.RigidBodyRotationVector.Y(lc=1, text=0.0),
+            vz=feb.rigid.RigidBodyRotationVector.Z(lc=1, text=3.14),
+        )
+    )
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    model_name = tmp_path / "RigidPrescribedRotationAboutVector.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidPrescribedRotationAboutVector.feb failed to run"
+
+
+def test_prescribed_euler_rotation(base_model, tmp_path):
+    my_model = deepcopy(base_model)
+    my_model.rigid_.add_rigid_bc(
+        feb.rigid.RigidBodyEulerAngle(
+            rb="bodyB",
+            Ex=feb.rigid.RigidBodyEulerAngle.X(lc=1, text=0.0),
+            Ey=feb.rigid.RigidBodyEulerAngle.Y(lc=1, text=0.0),
+            Ez=feb.rigid.RigidBodyEulerAngle.Z(lc=1, text=180.0),
+        )
+    )
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0"])))
+    model_name = tmp_path / "RigidEulerRotation.feb"
+    my_model.save(model_name)
+    assert feb.model.run_model(model_name, silent=False) == 0, "RigidEulerRotation.feb failed to run"
+
+
 def test_rigid_spherical_joint(base_model, tmp_path):
     my_model = deepcopy(base_model)
-    my_model.control_.time_steps = 40
-    my_model.control_.step_size = 0.05
+    my_model.control_.time_steps = 20
+    my_model.control_.step_size = 0.1
     my_model.control_.time_stepper = None
     spherical_joint = feb.rigid.RigidSphericalJoint(
         name="spherical_a-b",
