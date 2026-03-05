@@ -5,6 +5,8 @@ import pyfebio as feb
 
 def test_nodal_loads(hex8_febmesh, tmp_path):
     for nodal_load in get_args(feb.loads.NodalLoadType):
+        if isinstance(nodal_load, feb.loads.NodalFluidFlux):
+            continue
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
             my_model.material_.add_material(
@@ -37,6 +39,22 @@ def test_surface_loads(hex20_febmesh, tmp_path):
         my_model.save(tmp_path.joinpath(f"{surface_load.__name__}.feb"))
         result = feb.model.run_model(tmp_path.joinpath(f"{surface_load.__name__}.feb"), silent=False)
         assert result == 0, f"{surface_load.__name__} failed"
+
+
+def test_prescribed_nodal_fluid_flux(hex20_febmesh, tmp_path):
+    my_model = feb.model.BiphasicModel(mesh_=hex20_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_mat = feb.material.BiphasicMaterial(name=element.name, id=i + 1, permeability=feb.material.ConstantIsoPerm())
+        my_model.material_.add_material(my_mat)
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.loads_.add_nodal_load(feb.loads.NodalFluidFlux(node_set="top", value=feb.loads.Scale(lc=1, text=1.0e-3)))
+    my_model.loaddata_.add_load_curve(
+        feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "1.0,1.0", "10.0,0.0"]))
+    )
+    my_model.save(tmp_path.joinpath("PrescribedNodalFluidFlux.feb"))
+    result = feb.model.run_model(tmp_path.joinpath("PrescribedNodalFluidFlux.feb"), silent=False)
+    assert result == 0, "PrescribedNodalFluidFlux.feb failed to run."
 
 
 def test_biphasic_surface_loads(hex20_febmesh, tmp_path):

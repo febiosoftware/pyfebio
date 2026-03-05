@@ -377,7 +377,7 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ nodal_load
     - ✅ nodal_force
     - ✅ nodal_target_force
-    - ☑️ Nodal Fluid Flux
+    - ✅ Nodal Fluid Flux
   - ✅ Surface Loads
     - ✅ Traction Load
     - ✅ Pressure Load
@@ -403,12 +403,12 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Prescribed Displacement (solid)
   - ✅ Fixed Displacement (shell)
   - ✅️ Prescribed Displacement (shell)
-  - ☑️ Precribed Deformation Gradient
-  - ☑️ Displacement Along Normals
+  - ✅️ Precribed Deformation Gradient
+  - ✅️ Displacement Along Normals
   - ✅️ Fix to Rigid Body
   - ✅ Rigid Node Set Deformation (rotation about axis)
   - ✅ Zero Fluid Pressure
-  - ☑️ Prescribed Fluid Pressure
+  - ✅ Prescribed Fluid Pressure
 - Constraints
   - ☑️ Symmetry Plane
   - ☑️ Prestrain
@@ -427,7 +427,7 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Node-Facet
     - ✅ Biphasic
 - Step
-  - ☑️ Multistep Analysis
+  - ✅ Multistep Analysis
 - Output
   - ☑️ Log File Configuration
   - ✅ Plot File Configuration
