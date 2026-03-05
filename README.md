@@ -276,13 +276,13 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Solid Elements:
     - ✅ tet4
     - ✅ tet10
-    - ❌ tet15
+    - ☑️ tet15
     - ✅ hex8
     - ✅ hex20
     - ✅ hex27
     - ✅ penta6
-    - ❌ penta15
-    - ❌ pyra5
+    - ☑️ penta15
+    - ☑️ pyra5
   - ✅ Shell Elements:
     - ✅ tri3
     - ✅ tri6
@@ -366,9 +366,9 @@ Brief overview, see module documentation for more details. Unchecked are not yet
     - ✅ Follower Force
     - ✅ Follower Moment
     - ✅ Cable Load
-  - ☑️ Initial Conditions
-    - ☑️ Initial Velocity
-    - ☑️ Initial Angular Velocity
+  - ✅ Initial Conditions
+    - ✅ Initial Velocity
+    - ✅ Initial Angular Velocity
 - Initial
   - ☑️ Initial Velocity
   - ☑️ Initial Pre-strain

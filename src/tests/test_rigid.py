@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import get_args
 
 import pytest
 
@@ -382,9 +383,8 @@ def test_rigid_cable_load(base_model, tmp_path):
             relative=0,
             force=feb.rigid.Value(lc=1, text=10.0),
             rigid_cable_point=[
-                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyA", position="1.0,0.0,0.0"),
-                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyA", position="1.0,1.0,2.0"),
-                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyB", position="1.0,1.0,9.0"),
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyA", position="1.0,1.0,0.0"),
+                feb.rigid.RigidCableLoad.CablePoint(rigid_body_id="bodyB", position="1.0,3.0,9.0"),
             ],
         )
     )
@@ -397,6 +397,7 @@ def test_rigid_cable_load(base_model, tmp_path):
     outputs = feb.output.OutputPlotfile(
         all_vars=[
             feb.output.Var(type="rigid angular velocity"),
+            feb.output.Var(type="rigid force"),
             feb.output.Var(type="displacement"),
         ]
     )
@@ -448,3 +449,27 @@ def test_rigid_follower_force(base_model, tmp_path):
     model_name = tmp_path / "RigidFollowerForce.feb"
     my_model.save(model_name)
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidFollowerForce.feb failed to run"
+
+
+def test_rigid_initial_conditions(base_model, tmp_path):
+    for ic in get_args(feb.rigid.RigidInitialConditionType):
+        my_model = deepcopy(base_model)
+        my_model.control_.analysis = "DYNAMIC"
+        my_model.control_.time_steps = 10
+        my_model.control_.step_size = 0.1
+        my_model.control_.time_stepper = None
+        my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
+        my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Rz_dof=0, Ru_dof=1, Rv_dof=1, Rw_dof=0))
+        initial_condition = ic(rb="bodyB", value="0.0,0.0,6.28")
+        my_model.rigid_.add_rigid_initial_condition(initial_condition)
+        outputs = feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="rigid velocity"),
+                feb.output.Var(type="rigid angular velocity"),
+                feb.output.Var(type="displacement"),
+            ]
+        )
+        my_model.output_.add_plotfile(outputs)
+        model_name = tmp_path / f"{ic.__name__}.feb"
+        my_model.save(model_name)
+        assert feb.model.run_model(model_name, silent=False) == 0, f"{ic.__name__}.feb failed to run"
