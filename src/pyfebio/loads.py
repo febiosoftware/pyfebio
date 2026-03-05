@@ -20,6 +20,7 @@ class ScaleMath(BaseXmlModel, validate_assignment=True):
 class NodalLoad(BaseXmlModel, tag="nodal_load", validate_assignment=True):
     type: Literal["nodal_load"] = attr(default="nodal_load", frozen=True)
     node_set: str = attr()
+    relative: Literal[0, 1] = element(default=0)
     dof: Literal["x", "y", "z", "p"] = element(default="z")
     scale: Scale = element(default=Scale(lc=1))
 
@@ -27,6 +28,7 @@ class NodalLoad(BaseXmlModel, tag="nodal_load", validate_assignment=True):
 class NodalForce(BaseXmlModel, tag="nodal_load", validate_assignment=True):
     type: Literal["nodal_force"] = attr(default="nodal_force", frozen=True)
     node_set: str = attr()
+    relative: Literal[0, 1] = element(default=0)
     value: Scale = element(default=Scale(lc=1, text="0.0,0.0,1.0"))
 
 
@@ -37,7 +39,14 @@ class NodalTargetForce(BaseXmlModel, tag="nodal_load", validate_assignment=True)
     scale: Scale = element(default=Scale(lc=1))
 
 
-NodalLoadType = NodalLoad | NodalForce | NodalTargetForce
+class NodalFluidFlux(BaseXmlModel, tag="nodal_load", validate_assignment=True):
+    type: Literal["nodal fluidflux"] = attr(default="nodal fluidflux", frozen=True)
+    node_set: str = attr()
+    relative: Literal[0, 1] = element(default=0)
+    value: Scale = element()
+
+
+NodalLoadType = NodalLoad | NodalForce | NodalTargetForce | NodalFluidFlux
 
 
 class FluidFlux(BaseXmlModel, tag="surface_load", validate_assignment=True):
