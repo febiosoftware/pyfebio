@@ -5,7 +5,7 @@ import pyfebio as feb
 
 def test_nodal_loads(hex8_febmesh, tmp_path):
     for nodal_load in get_args(feb.loads.NodalLoadType):
-        if isinstance(nodal_load, feb.loads.NodalFluidFlux):
+        if nodal_load.__name__ == "NodalFluidFlux":
             continue
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
