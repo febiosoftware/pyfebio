@@ -2,7 +2,7 @@ from typing import Literal
 
 import meshio
 import numpy as np
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_xml import BaseXmlModel, attr, element
 
 from ._types import (
@@ -11,6 +11,7 @@ from ._types import (
     StringUIntVec2,
     StringUIntVec3,
     StringUIntVec4,
+    StringUIntVec5,
     StringUIntVec6,
     StringUIntVec8,
     StringUIntVec9,
@@ -20,7 +21,7 @@ from ._types import (
     StringUIntVec27,
 )
 
-SolidFEBioElementType = Literal["tet4", "tet10", "tet15", "hex8", "hex20", "hex27", "penta6"]
+SolidFEBioElementType = Literal["tet4", "tet10", "tet15", "hex8", "hex20", "hex27", "penta6", "penta15", "pyra5"]
 ShellFEBioElementType = Literal["tri3", "tri6", "quad4", "quad8", "quad9", "q4ans", "q4eas"]
 BeamFEBioElementType = Literal["line2", "line3"]
 
@@ -73,6 +74,16 @@ class Penta6Element(BaseXmlModel, tag="elem", validate_assignment=True):
     id: int = attr()
 
 
+class Penta15Element(BaseXmlModel, tag="elem", validate_assignment=True):
+    text: StringUIntVec15 = Field(default="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15")
+    id: int = attr()
+
+
+class Pyra5Element(BaseXmlModel, tag="elem", validate_assignment=True):
+    text: StringUIntVec5 = Field(default="1,2,3,4,5")
+    id: int = attr()
+
+
 class Tri3Element(BaseXmlModel, tag="elem", validate_assignment=True):
     text: StringUIntVec3 = Field(default="1,2,3")
     id: int = attr()
@@ -116,6 +127,8 @@ ElementType = (
     | Hex20Element
     | Hex27Element
     | Penta6Element
+    | Penta15Element
+    | Pyra5Element
     | Tri3Element
     | Tri6Element
     | Quad4Element
@@ -125,6 +138,27 @@ ElementType = (
     | Line3Element
 )
 
+ELEMENT_CLASS_MAP: dict[str, type[ElementType]] = {
+    "tet4": Tet4Element,
+    "tet10": Tet10Element,
+    "tet15": Tet15Element,
+    "hex8": Hex8Element,
+    "hex20": Hex20Element,
+    "hex27": Hex27Element,
+    "tri3": Tri3Element,
+    "tri6": Tri6Element,
+    "penta6": Penta6Element,
+    "penta15": Penta15Element,
+    "pyra5": Pyra5Element,
+    "quad4": Quad4Element,
+    "q4ans": Quad4Element,
+    "q4eas": Quad4Element,
+    "quad8": Quad8Element,
+    "quad9": Quad9Element,
+    "line2": Line2Element,
+    "line3": Line3Element,
+}
+
 
 class Elements(BaseXmlModel, tag="elements", validate_assignment=True):
     name: str = attr(default="Part")
@@ -133,6 +167,12 @@ class Elements(BaseXmlModel, tag="elements", validate_assignment=True):
 
     def add_element(self, new_element: ElementType):
         self.all_elements.append(new_element)
+
+    @model_validator(mode="after")
+    def validate_elements(self):
+        if not all(isinstance(elm, ELEMENT_CLASS_MAP[self.type]) for elm in self.all_elements):
+            raise ValueError(f"All elements must be of type: {self.type}")
+        return self
 
 
 class ElementSet(BaseXmlModel, tag="ElementSet", validate_assignment=True):
@@ -269,20 +309,6 @@ ELEMENT_MAP: dict[str, SolidFEBioElementType | ShellFEBioElementType | BeamFEBio
     "quad9": "quad9",
     "line": "line2",
     "line3": "line3",
-}
-ELEMENT_CLASS_MAP: dict[str, type[ElementType]] = {
-    "tet4": Tet4Element,
-    "tet10": Tet10Element,
-    "hex8": Hex8Element,
-    "hex20": Hex20Element,
-    "hex27": Hex27Element,
-    "tri3": Tri3Element,
-    "tri6": Tri6Element,
-    "quad4": Quad4Element,
-    "quad8": Quad8Element,
-    "quad9": Quad9Element,
-    "line2": Line2Element,
-    "line3": Line3Element,
 }
 
 EXCLUDE_SET_STR = ("gmsh:bounding_entities",)

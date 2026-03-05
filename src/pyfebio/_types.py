@@ -59,6 +59,11 @@ StringUIntVec4 = Annotated[
     StringConstraints(strip_whitespace=True, pattern=r"^" + ",".join([r"\d+"] * 4) + r"$"),
 ]
 
+StringUIntVec5 = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, pattern=r"^" + ",".join([r"\d+"] * 5) + r"$"),
+]
+
 StringUIntVec6 = Annotated[
     str,
     StringConstraints(strip_whitespace=True, pattern=r"^" + ",".join([r"\d+"] * 6) + r"$"),
