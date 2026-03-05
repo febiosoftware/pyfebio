@@ -1,7 +1,7 @@
 r"""
 This module converts XPLT files to HDF5. It can be run from the command line with:
 
-..code-block:: bash
+.. code-block:: bash
 
     python -m pyfebio.xplt [path/to/xplt_file] Optional[path/to/hdf5_output]
 
@@ -9,7 +9,7 @@ If the output path is not provided it will be set to [path/to/xplt_file] with th
 
 To use in a script:
 
-..code-block:: python
+.. code-block:: python
 
     from pyfebio import xplt
 
