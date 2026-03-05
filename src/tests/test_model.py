@@ -254,3 +254,96 @@ def test_rigid_fixed_bc(hex20_contact_febmesh, tmp_path):
     my_model.save(tmp_path.joinpath("model.feb"))
     result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
     assert result == 0
+
+
+def test_prescribed_deformation_gradient_bc(hex8_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=hex8_febmesh)
+    my_model.mesh_.add_node_set(
+        feb.mesh.NodeSet(name="all", text=",".join([str(i + 1) for i, _ in enumerate(hex8_febmesh.nodes[0].all_nodes)]))
+    )
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(
+        feb.boundary.BCPrescribedDeformation(
+            node_set="all", scale=feb.boundary.Value(lc=1, text=1.0), F="4.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.5"
+        )
+    )
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+    my_model.output_.add_plotfile(
+        feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="deformation gradient"),
+                feb.output.Var(type="displacement"),
+                feb.output.Var(type="relative volume"),
+            ]
+        )
+    )
+
+    my_model.save(tmp_path.joinpath("PrescribedDeformationGradient.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('PrescribedDeformationGradient.feb')}")
+    assert result == 0, "PrescribedDeformationGradient.feb failed to run."
+
+
+def test_displacement_along_normals(hex8_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=hex8_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCNormalDisplacement(surface="top", scale=feb.boundary.Value(lc=1, text=1.0)))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+    my_model.output_.add_plotfile(
+        feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="displacement"),
+            ]
+        )
+    )
+
+    my_model.save(tmp_path.joinpath("DisplacementAlongNormals.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('DisplacementAlongNormals.feb')}")
+    assert result == 0, "DisplacementAlongNormals.feb failed to run."
+
+
+def test_prescribed_fluid_pressure(hex20_febmesh, tmp_path):
+    my_model = feb.model.BiphasicModel(mesh_=hex20_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.BiphasicMaterial(name=element.name, id=i + 1, solid=feb.material.NeoHookean()))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroFluidPressure(node_set="bottom"))
+    my_model.boundary_.add_bc(feb.boundary.BCPrescribedFluidPressure(node_set="top", value=feb.boundary.Value(lc=1, text=1.0e-1)))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1.0,1", "10.0,0.0"])))
+    my_model.output_.add_plotfile(
+        feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="effective fluid pressure"),
+                feb.output.Var(type="displacement"),
+                feb.output.Var(type="nodal fluid flux"),
+            ]
+        )
+    )
+    my_model.save(tmp_path.joinpath("PrescribedFluidPressure.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('PrescribedFluidPressure.feb')}")
+    assert result == 0, "PrescribedFluidPressure.feb failed to run."
+
+
+def test_multistep_model(hex8_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=hex8_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    displacement_bcs = feb.boundary.Boundary()
+    displacement_bcs.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=feb.boundary.Value(lc=1, text=0.1)))
+    my_model.step_.add_step(feb.step.StepEntry(id=1, name="displacement", boundary=displacement_bcs))
+    force_step_loads = feb.loads.Loads()
+    force_step_loads.add_nodal_load(feb.loads.NodalLoad(node_set="top", relative=1, dof="z", scale=feb.loads.Scale(lc=2, text=0.05)))
+    my_model.step_.add_step(feb.step.StepEntry(id=2, name="force", loads=force_step_loads))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1.0,1"])))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=2, points=feb.loaddata.CurvePoints(points=["1,0", "2.0,1"])))
+    my_model.save(tmp_path.joinpath("MultistepModel.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('MultistepModel.feb')}", silent=False)
+    assert result == 0, "MultistepModel.feb failed to run."
