@@ -150,6 +150,7 @@ PlotDataVariables = Literal[
     "current element kinetic energy",
     "current element linear momentum",
     "current element strain energy",
+    "deformation gradient",
     "damage",
     "density",
     "deviatoric strain energy density",
