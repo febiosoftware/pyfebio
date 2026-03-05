@@ -1,5 +1,6 @@
 from typing import Literal
 
+from pydantic import model_validator
 from pydantic_xml import BaseXmlModel, attr, element
 
 from ._types import (
@@ -31,6 +32,14 @@ class RigidPrescribed(BaseXmlModel, tag="rigid_bc", validate_assignment=True):
     dof: Literal["x", "y", "z", "Ru", "Rv", "Rw"] = element()
     relative: Literal[0, 1] = element(default=0)
     value: Value = element()
+
+    @model_validator(mode="after")
+    def validate_type(self):
+        if self.type == "rigid_displacement" and self.dof not in ["x", "y", "z"]:
+            raise ValueError("dof must be 'x', 'y', or 'z' for type='rigid_displacement'")
+        if self.type == "rigid_rotation" and self.dof not in ["Ru", "Rv", "Rw"]:
+            raise ValueError("dof must be 'Ru', 'Rv', or 'Rw' for type='rigid_rotation'")
+        return self
 
 
 class RigidBodyRotationVector(BaseXmlModel, tag="rigid_bc", validate_assignment=True):
@@ -249,6 +258,18 @@ class RigidContractileForce(BaseXmlModel, tag="rigid_connector", validate_assign
     f0: Value = element()
 
 
+class RigidInitialVelocity(BaseXmlModel, tag="rigid_ic", validate_assignment=True):
+    type: Literal["initial_rigid_velocity"] = attr(default="initial_rigid_velocity", frozen=True)
+    rb: str = element()
+    value: StringFloatVec3 = element(default="0.0,0.0,0.0")
+
+
+class RigidInitialAngularVelocity(BaseXmlModel, tag="rigid_ic", validate_assignment=True):
+    type: Literal["initial_rigid_angular_velocity"] = attr(default="initial_rigid_angular_velocity", frozen=True)
+    rb: str = element()
+    value: StringFloatVec3 = element(default="0.0,0.0,0.0")
+
+
 RigidBCType = RigidFixed | RigidPrescribed | RigidBodyRotationVector | RigidBodyEulerAngle
 
 RigidLoadType = RigidForceLoad | RigidFollowerForceLoad | RigidMomentLoad | RigidFollowerMomentLoad | RigidCableLoad
@@ -266,11 +287,14 @@ RigidConnectorType = (
     | RigidContractileForce
 )
 
+RigidInitialConditionType = RigidInitialVelocity | RigidInitialAngularVelocity
+
 
 class Rigid(BaseXmlModel, tag="Rigid", validate_assignment=True):
     all_rigid_bcs: list[RigidBCType] = element(default=[], tag="rigid_bc")
     all_rigid_loads: list[RigidLoadType] = element(default=[], tag="rigid_load")
     all_rigid_connectors: list[RigidConnectorType] = element(default=[], tag="rigid_connector")
+    all_rigid_initial_conditions: list[RigidInitialConditionType] = element(default=[], tag="rigid_ic")
 
     def add_rigid_bc(
         self,
@@ -286,3 +310,6 @@ class Rigid(BaseXmlModel, tag="Rigid", validate_assignment=True):
 
     def add_rigid_connector(self, new_rigid_connector: RigidConnectorType):
         self.all_rigid_connectors.append(new_rigid_connector)
+
+    def add_rigid_initial_condition(self, new_rigid_initial_condition: RigidInitialConditionType):
+        self.all_rigid_initial_conditions.append(new_rigid_initial_condition)
