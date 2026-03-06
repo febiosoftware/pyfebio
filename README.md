@@ -276,13 +276,13 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Solid Elements:
     - ✅ tet4
     - ✅ tet10
-    - ☑️ tet15
+    - ✅ tet15
     - ✅ hex8
     - ✅ hex20
     - ✅ hex27
     - ✅ penta6
     - ☑️ penta15
-    - ☑️ pyra5
+    - ✅ pyra5
   - ✅ Shell Elements:
     - ✅ tri3
     - ✅ tri6

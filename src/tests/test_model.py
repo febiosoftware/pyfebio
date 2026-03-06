@@ -45,6 +45,21 @@ def test_tet10_model(tet10_febmesh, tmp_path):
     assert result == 0
 
 
+def test_tet15_model(tet15_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=tet15_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top", x_dof=1, y_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=feb.boundary.Value(lc=1, text=-0.25)))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+
+    my_model.save(tmp_path.joinpath("model.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
+    assert result == 0
+
+
 def test_hex8_model(hex8_febmesh, tmp_path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
@@ -112,6 +127,21 @@ def test_penta6_model(penta6_febmesh, tmp_path):
         my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
     my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
     my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=feb.boundary.Value(lc=1, text=-0.2)))
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
+
+    my_model.save(tmp_path.joinpath("model.feb"))
+    result = feb.model.run_model(f"{tmp_path.joinpath('model.feb')}")
+    assert result == 0
+
+
+def test_pyra5_model(pyra5_febmesh, tmp_path):
+    my_model = feb.model.Model(mesh_=pyra5_febmesh)
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCZeroDisplacement(node_set="top", x_dof=1, y_dof=1))
+    my_model.boundary_.add_bc(feb.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=feb.boundary.Value(lc=1, text=-0.25)))
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "1,1"])))
 
     my_model.save(tmp_path.joinpath("model.feb"))

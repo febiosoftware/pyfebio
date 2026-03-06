@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import meshio
+import numpy as np
 import pytest
-from numpy import cos, linspace, pi, sin
 
 from pyfebio import mesh
 
@@ -94,9 +94,9 @@ def hex27_contact_febmesh() -> mesh.Mesh:
 
 @pytest.fixture(scope="session")
 def penta6_febmesh() -> mesh.Mesh:
-    theta = linspace(0.0, 2 * pi, 8)
-    x = cos(theta)
-    y = sin(theta)
+    theta = np.linspace(0.0, 2 * np.pi, 8)
+    x = np.cos(theta)
+    y = np.sin(theta)
     nodes = [mesh.Node(id=i + 1, text=",".join(map(str, [x[i], y[i], 0.0]))) for i in range(len(x) - 1)]
     nodes += [mesh.Node(id=i + len(x), text=",".join(map(str, [x[i], y[i], 1.0]))) for i in range(len(x) - 1)]
     nodes += [mesh.Node(id=len(nodes) + 1, text="0.0,0.0,0.0"), mesh.Node(id=len(nodes) + 2, text="0.0,0.0,1.0")]
@@ -367,4 +367,48 @@ def shell_quad9():
         mesh.Edge(name="left", all_line3=[mesh.Line3Element(id=3, text="4,1,8")]),
         mesh.Edge(name="right", all_line3=[mesh.Line3Element(id=4, text="2,3,6")]),
     ]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def tet15_febmesh():
+    nodes = [
+        np.array([-1, -1 / np.sqrt(3), -1]),
+        np.array([1, -1 / np.sqrt(3), -1]),
+        np.array([0, 2 / np.sqrt(3), -1]),
+        np.array([0, 0, 1 / np.sqrt(3)]),
+    ]
+    nodes += [(nodes[0] + nodes[1]) / 2.0, (nodes[1] + nodes[2]) / 2.0, (nodes[2] + nodes[0]) / 2.0]
+    nodes += [(nodes[0] + nodes[3]) / 2.0, (nodes[1] + nodes[3]) / 2.0, (nodes[2] + nodes[3]) / 2.0]
+    nodes += [
+        (nodes[0] + nodes[1] + nodes[2]) / 3.0,
+        (nodes[0] + nodes[1] + nodes[3]) / 3.0,
+        (nodes[1] + nodes[2] + nodes[3]) / 3.0,
+        (nodes[0] + nodes[2] + nodes[3]) / 3.0,
+    ]
+    nodes += [(nodes[0] + nodes[1] + nodes[2] + nodes[3]) / 4.0]
+    nodes = [mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]
+    mesh_obj = mesh.Mesh(
+        nodes=[mesh.Nodes(name="tet15", all_nodes=nodes)],
+        elements=[
+            mesh.Elements(
+                name="tet15", type="tet15", all_elements=[mesh.Tet15Element(id=1, text=",".join([str(i + 1) for i in range(15)]))]
+            )
+        ],
+    )
+    mesh_obj.node_sets = [mesh.NodeSet(name="top", text="4"), mesh.NodeSet(name="bottom", text="1,2,3,5,6,7,14")]
+    return mesh_obj
+
+
+@pytest.fixture(scope="session")
+def pyra5_febmesh():
+    nodes = [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.5, 0.5, 0.0], [-0.5, 0.5, 0.0], [0.0, 0.0, 1.0 / np.sqrt(2.0)]]
+    nodes = [mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]
+    mesh_obj = mesh.Mesh(
+        nodes=[mesh.Nodes(name="pyra5", all_nodes=nodes)],
+        elements=[
+            mesh.Elements(name="pyra5", type="pyra5", all_elements=[mesh.Pyra5Element(id=1, text=",".join([str(i + 1) for i in range(5)]))])
+        ],
+    )
+    mesh_obj.node_sets = [mesh.NodeSet(name="top", text="5"), mesh.NodeSet(name="bottom", text="1,2,3,4")]
     return mesh_obj
