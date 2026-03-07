@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, NegativeFloat, PositiveFloat, model_validator
 from pydantic_xml import BaseXmlModel, attr, element
 
 from ._types import StringFloatVec2
@@ -59,7 +59,7 @@ class NonlinearSpring(BaseXmlModel, tag="discrete_material", validate_assignment
     name: str = attr()
     type: Literal["nonlinear spring"] = attr(default="nonlinear spring", frozen=True)
     scale: float = element(default=1.0)
-    measure: Literal["strain"] = element(default="strain", frozen=True)
+    measure: Literal["elongation", "strain", "stretch"] = element(default="elongation")
     force: NonlinearSpringForce = element()
 
 
@@ -68,6 +68,15 @@ class TensionOnlyLinearSpring(BaseXmlModel, tag="discrete_material", validate_as
     name: str = attr()
     type: Literal["tension-only linear spring"] = attr(default="tension-only linear spring", frozen=True)
     E: float = element(default=1.0)
+
+
+class ExperimentalSpring(BaseXmlModel, tag="discrete_material", validate_assignment=True):
+    id: int = attr()
+    name: str = attr()
+    type: Literal["experimental spring"] = attr(default="experimental spring", frozen=True)
+    E: float = element(default=1.0)
+    sM: PositiveFloat | NegativeFloat = element(default=1.0)
+    sm: PositiveFloat | NegativeFloat = element(default=2.0)
 
 
 class HillElement(BaseXmlModel, tag="discrete_material", validate_assignment=True):
@@ -85,7 +94,7 @@ class HillElement(BaseXmlModel, tag="discrete_material", validate_assignment=Tru
     Fvl: Scale | None = element(default=None)
 
 
-DiscreteMaterialType = NonlinearSpring | Spring | TensionOnlyLinearSpring | HillElement
+DiscreteMaterialType = NonlinearSpring | Spring | TensionOnlyLinearSpring | HillElement | ExperimentalSpring
 
 
 class DiscreteEntry(BaseXmlModel, tag="discrete", validate_assignment=True):
@@ -94,11 +103,11 @@ class DiscreteEntry(BaseXmlModel, tag="discrete", validate_assignment=True):
 
 
 class Discrete(BaseXmlModel, validate_assignment=True):
-    discrete_materials: list[DiscreteMaterialType] = element(default=[])
-    discrete_elements: list[DiscreteEntry] = element(default=[])
+    discrete_materials: tuple[DiscreteMaterialType, ...] = element(default=())
+    discrete_elements: tuple[DiscreteEntry, ...] = element(default=())
 
     def add_discrete_material(self, new_material: DiscreteMaterialType):
-        self.discrete_materials.append(new_material)
+        self.discrete_materials += (new_material,)
 
     def add_discrete_element(self, new_element: DiscreteEntry):
-        self.discrete_elements.append(new_element)
+        self.discrete_elements += (new_element,)
