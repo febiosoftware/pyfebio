@@ -112,7 +112,7 @@ def penta6_febmesh() -> mesh.Mesh:
     ]
     elements = [mesh.Penta6Element(id=i + 1, text=",".join(map(str, elem))) for i, elem in enumerate(elements)]
     mesh_obj = mesh.Mesh(
-        nodes=[mesh.Nodes(all_nodes=nodes)],
+        nodes=(mesh.Nodes(all_nodes=nodes),),
         elements=[mesh.Elements(name="penta_mesh", type="penta6", all_elements=elements)],  # type:ignore
     )
     mesh_obj.node_sets = [
@@ -127,7 +127,7 @@ def beam2_febmesh() -> mesh.Mesh:
     node_list = [[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [1.0, 0.0, 0.0], [0.25, 1.0, 0.0], [0.75, 1.0, 0.0]]
     element_list = [[1, 2], [2, 3], [1, 4], [4, 5], [4, 2], [5, 2], [5, 3]]
     mesh_obj = mesh.Mesh(
-        nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for (i, node) in enumerate(node_list)])]
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for (i, node) in enumerate(node_list)]),)
     )
     mesh_obj.elements = [
         mesh.Elements(
@@ -143,11 +143,11 @@ def beam2_febmesh() -> mesh.Mesh:
 @pytest.fixture(scope="session")
 def beam3_febmesh() -> mesh.Mesh:
     mesh_obj = mesh.Mesh(
-        nodes=[
+        nodes=(
             mesh.Nodes(
                 all_nodes=[mesh.Node(id=1, text="0.0,0.0,0.0"), mesh.Node(id=2, text="0.5,0.0,0.0"), mesh.Node(id=3, text="1.0,0.0,0.0")]
-            )
-        ]
+            ),
+        )
     )
     mesh_obj.elements = [mesh.Elements(type="line3", name="beam", all_elements=[mesh.Line3Element(id=1, text="1,3,2")])]
     mesh_obj.node_sets = [mesh.NodeSet(name="left", text="1"), mesh.NodeSet(name="right", text="3")]
@@ -177,7 +177,9 @@ def rigid_body_febmesh():
     part1 = [1, 2, 3, 4, 5, 6, 7, 8]
     part2 = [9, 10, 11, 12, 13, 14, 15, 16]
 
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
 
     mesh_obj.elements = [
         mesh.Elements(type="hex8", name="bodyA", all_elements=[mesh.Hex8Element(id=1, text=",".join(map(str, part1)))]),
@@ -197,7 +199,9 @@ def rigid_body_febmesh():
 def shell_tri3():
     nodes = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0]]
     elements = [[1, 2, 3], [2, 4, 3]]
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
     mesh_obj.elements = [
         mesh.Elements(
             type="tri3", all_elements=[mesh.Tri3Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
@@ -239,7 +243,9 @@ def shell_tri6():
         [1, 2, 3, 4, 5, 6],
         [2, 7, 3, 8, 9, 5],
     ]
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
     mesh_obj.elements = [
         mesh.Elements(
             type="tri6", all_elements=[mesh.Tri6Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
@@ -268,7 +274,9 @@ def shell_tri6():
 def shell_quad4():
     nodes = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0], [0.0, 0.0, 1.0]]
     elements = [[1, 2, 3, 4]]
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
     mesh_obj.elements = [
         mesh.Elements(
             type="quad4", all_elements=[mesh.Quad4Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
@@ -306,7 +314,9 @@ def shell_quad8():
         [0.0, 0.0, 0.5],
     ]
     elements = [[1, 2, 3, 4, 5, 6, 7, 8]]
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
     mesh_obj.elements = [
         mesh.Elements(
             type="quad8", all_elements=[mesh.Quad8Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
@@ -345,7 +355,9 @@ def shell_quad9():
         [0.5, 0.0, 0.5],
     ]
     elements = [[1, 2, 3, 4, 5, 6, 7, 8, 9]]
-    mesh_obj = mesh.Mesh(nodes=[mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)])])
+    mesh_obj = mesh.Mesh(
+        nodes=(mesh.Nodes(all_nodes=[mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]),)
+    )
     mesh_obj.elements = [
         mesh.Elements(
             type="quad9", all_elements=[mesh.Quad9Element(id=i + 1, text=",".join(map(str, elm))) for i, elm in enumerate(elements)]
@@ -389,7 +401,7 @@ def tet15_febmesh():
     nodes += [(nodes[0] + nodes[1] + nodes[2] + nodes[3]) / 4.0]
     nodes = [mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]
     mesh_obj = mesh.Mesh(
-        nodes=[mesh.Nodes(name="tet15", all_nodes=nodes)],
+        nodes=(mesh.Nodes(name="tet15", all_nodes=nodes),),
         elements=[
             mesh.Elements(
                 name="tet15", type="tet15", all_elements=[mesh.Tet15Element(id=1, text=",".join([str(i + 1) for i in range(15)]))]
@@ -405,7 +417,7 @@ def pyra5_febmesh():
     nodes = [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.5, 0.5, 0.0], [-0.5, 0.5, 0.0], [0.0, 0.0, 1.0 / np.sqrt(2.0)]]
     nodes = [mesh.Node(id=i + 1, text=",".join(map(str, node))) for i, node in enumerate(nodes)]
     mesh_obj = mesh.Mesh(
-        nodes=[mesh.Nodes(name="pyra5", all_nodes=nodes)],
+        nodes=(mesh.Nodes(name="pyra5", all_nodes=nodes),),
         elements=[
             mesh.Elements(name="pyra5", type="pyra5", all_elements=[mesh.Pyra5Element(id=1, text=",".join([str(i + 1) for i in range(5)]))])
         ],

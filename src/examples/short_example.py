@@ -30,7 +30,7 @@ for i, element in enumerate(elements_list):
     elements.add_element(pyfebio.mesh.Hex8Element(id=i + 1, text=",".join(map(str, element))))
 
 # Append nodes and elements to the model's mesh section
-my_model.mesh_.nodes.append(nodes)
+my_model.mesh_.nodes += (nodes,)
 my_model.mesh_.elements.append(elements)
 
 # Let's make a node set for top and bottom

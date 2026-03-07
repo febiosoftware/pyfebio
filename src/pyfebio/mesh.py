@@ -246,7 +246,7 @@ class DiscreteSet(BaseXmlModel, tag="DiscreteSet", validate_assignment=True):
 
 
 class Mesh(BaseXmlModel, validate_assignment=True):
-    nodes: list[Nodes] = element(default=[], tag="Nodes")
+    nodes: tuple[Nodes, ...] = element(default=(), tag="Nodes")
     elements: list[Elements] = element(default=[], tag="Elements")
     surfaces: list[Surface] = element(default=[], tag="Surface")
     edges: list[Edge] = element(default=[], tag="Edge")
@@ -258,7 +258,7 @@ class Mesh(BaseXmlModel, validate_assignment=True):
     def add_node_domain(self, new_node_domain: Nodes):
         if not new_node_domain.name:
             new_node_domain.name = f"Part{len(self.nodes) + 1}"
-        self.nodes.append(new_node_domain)
+        self.nodes += (new_node_domain,)
 
     def add_element_domain(self, new_element_domain: Elements):
         if new_element_domain.name == "Part":
@@ -394,5 +394,5 @@ def translate_meshio(
                 node_sets = sorted(set(node_set))
                 febio_mesh.node_sets.append(NodeSet(name=set_name, text=",".join(map(str, node_sets))))
                 febio_mesh.surfaces.append(surface_object)
-    febio_mesh.nodes.append(nodes_object)
+    febio_mesh.nodes += (nodes_object,)
     return febio_mesh
