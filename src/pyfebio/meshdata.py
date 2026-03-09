@@ -19,6 +19,7 @@ class NodeData(BaseXmlModel, validate_assignment=True):
     all_nodes: list[NodeDataNode] = element(default=[], tag="node")
 
     def add_node(self, new_node: NodeDataNode):
+        assert isinstance(new_node, NodeDataNode), "new_node must be a NodeDataNode"
         self.all_nodes.append(new_node)
 
 
@@ -34,6 +35,7 @@ class ElementData(BaseXmlModel, validate_assignment=True):
     all_elements: list[ElementDataElement] = element(default=[], tag="elem")
 
     def add_element(self, new_element: ElementDataElement):
+        assert isinstance(new_element, ElementDataElement), "new_element must be an ElementDataElement"
         self.all_elements.append(new_element)
 
 

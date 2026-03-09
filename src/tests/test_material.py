@@ -251,3 +251,49 @@ def test_viscoelastic_uc_material(hex20_febmesh, tmp_path):
     my_model.save(model_file)
     result = feb.model.run_model(model_file, silent=False)
     assert result == 0
+
+
+def test_multiphasic_model(hex20_febmesh, tmp_path):
+    my_model = feb.model.MultiphasicModel(
+        mesh_=hex20_febmesh,
+    )
+    my_model.globals_.solutes = feb.globals.Solutes(
+        solute=[feb.globals.Solute(id=1, name="solute1"), feb.globals.Solute(id=2, name="solute2")]
+    )
+    my_model.globals_.solid_bound_molecules = feb.globals.SolidBoundMolecules(
+        solid_bound=[feb.globals.SolidBoundMolecule(id=1, name="sbm1"), feb.globals.SolidBoundMolecule(id=2, name="sbm2")]
+    )
+    for i, element in enumerate(my_model.mesh_.elements):
+        my_mat = feb.material.MultiphasicMaterial(
+            id=i + 1,
+            name=element.name,
+            solute=[feb.material.Solute(sol=1), feb.material.Solute(sol=2)],
+            solid_bound=[
+                feb.material.SolidBoundMolecule(sbm=1, rho0=feb.material.MaterialParameter(text=0.1)),
+                feb.material.SolidBoundMolecule(sbm=2, rho0=feb.material.MaterialParameter(text=0.1)),
+            ],
+        )
+        my_model.material_.add_material(my_mat)
+        my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
+    fixed_bottom = feb.boundary.BCZeroDisplacement(node_set="bottom", x_dof=1, y_dof=1, z_dof=1)
+    move_top = feb.boundary.BCPrescribedDisplacement(node_set="top", dof="z", value=feb.boundary.Value(lc=1, text=-0.5))
+    fix_top = feb.boundary.BCZeroDisplacement(node_set="top", x_dof=1, y_dof=1, z_dof=0)
+    draining_surface = feb.boundary.BCZeroFluidPressure(node_set="top")
+    my_model.boundary_.add_bc(fixed_bottom)
+    my_model.boundary_.add_bc(move_top)
+    my_model.boundary_.add_bc(fix_top)
+    my_model.boundary_.add_bc(draining_surface)
+    my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0,0", "0.1,1.0", "1.0,1.0"])))
+    my_model.output_.add_plotfile(
+        feb.output.OutputPlotfile(
+            all_vars=[
+                feb.output.Var(type="displacement"),
+                feb.output.Var(type="fluid pressure"),
+                feb.output.Var(type="fluid flux"),
+            ]
+        )
+    )
+    model_file = tmp_path.joinpath("Multiphasic.feb")
+    my_model.save(model_file)
+    result = feb.model.run_model(model_file, silent=False)
+    assert result == 0, "Multiphasic.feb failed"

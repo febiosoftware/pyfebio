@@ -139,6 +139,19 @@ class BiphasicModel(Model):
     )
 
 
+class MultiphasicModel(Model):
+    module_: module.Module | None = element(default=module.Module(type="multiphasic"))
+    control_: control.Control | None = element(
+        default=control.Control(
+            analysis="TRANSIENT",
+            solver=control.Solver(type="multiphasic", ptol=0.01, ctol=0.01),
+            time_steps=100,
+            step_size=0.1,
+            time_stepper=control.TimeStepper(dtmax=control.TimeStepValue(text=0.1)),
+        )
+    )
+
+
 def run_model(filepath: str | Path, silent: bool = False) -> int:
     if silent:
         return subprocess.run(f"febio4 -i {filepath} -silent", shell=True).returncode

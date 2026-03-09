@@ -40,11 +40,12 @@ class Solver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     More nuanced parameters can be added as needed.
     """
 
-    type: Literal["solid", "biphasic"] = attr(default="solid")
+    type: Literal["solid", "biphasic", "multiphasic"] = attr(default="solid")
     dtol: float = element(default=0.001, gt=0)
     etol: float = element(default=0.01, ge=0)
     rtol: float = element(default=0, ge=0)
     ptol: float | None = element(default=None)
+    ctol: float | None = element(default=None)
     lstol: float = element(default=0.9, ge=0)
     lsmin: float = element(default=0.01, gt=0)
     lsiter: int = element(default=5, ge=0)

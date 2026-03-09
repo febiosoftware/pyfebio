@@ -228,13 +228,6 @@ class ActiveContraction(BaseXmlModel, tag="active_contraction", extra="forbid"):
     refl: MatPositiveFloat = element(default=MaterialParameter(text=2.04))
 
 
-class SolidBoundMolecule(BaseXmlModel, tag="solid_bound", extra="forbid"):
-    sbm: int = attr(default=1)
-    rho0: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
-    rhomin: MatPositiveFloat = element(default=MaterialParameter(text=0.1))
-    rhomax: MatPositiveFloat = element(default=MaterialParameter(text=5.0))
-
-
 class ArrudaBoyce(MaterialBase, tag="material", extra="forbid"):
     type: Literal["Arruda-Boyce unconstrained"] = attr(default="Arruda-Boyce unconstrained", frozen=True)
     ksi: MatPositiveFloat = element(default=MaterialParameter(text=10.0))
@@ -983,7 +976,7 @@ class ContinuousFiberDistributionUC(BaseXmlModel, tag="solid", extra="forbid"):
 
 
 # Solid Mixture
-class SolidMixture(MaterialBaseNoDensity, tag="material", extra="forbid"):
+class SolidMixture(MaterialBase, tag="material", extra="forbid"):
     type: Literal["solid mixture"] = attr(default="solid mixture", frozen=True)
     solid_list: list[UnconstrainedMaterials | FiberModel | ContinuousFiberDistribution | EvolvingUnconstrainedMaterials] = element(
         tag="solid", default=[]
@@ -993,21 +986,27 @@ class SolidMixture(MaterialBaseNoDensity, tag="material", extra="forbid"):
         self,
         new_solid: UnconstrainedMaterials | FiberModel | ContinuousFiberDistribution | EvolvingUnconstrainedMaterials,
     ):
+        assert isinstance(new_solid, (UnconstrainedMaterials, FiberModel, ContinuousFiberDistribution, EvolvingUnconstrainedMaterials)), (
+            "new_solid must be an UnconstrainedMaterials, FiberModel, ContinuousFiberDistribution, or EvolvingUnconstrainedMaterials"
+        )
         self.solid_list.append(new_solid)
 
 
 # Uncoupled Solid Mixture
-class SolidMixtureUC(MaterialBaseNoDensity, tag="material", extra="forbid"):
+class SolidMixtureUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["solid mixture"] = attr(default="uncoupled solid mixture", frozen=True)
     solid_list: list[UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC] = element(tag="solid", default=[])
     k: MatPositiveFloat = MaterialParameter(text=1000.0)
 
     def add_solid(self, new_solid: UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC):
+        assert isinstance(new_solid, (UncoupledMaterials, FiberModelUC, ContinuousFiberDistributionUC)), (
+            "new_solid must be an UncoupledMaterials, FiberModelUC, or ContinuousFiberDistributionUC"
+        )
         self.solid_list.append(new_solid)
 
 
 # Viscoelastic Material
-class ViscoelasticMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"):
+class ViscoelasticMaterial(MaterialBase, tag="material", extra="forbid"):
     type: Literal["viscoelastic"] = attr(default="viscoelastic", frozen=True)
     g0: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
     g1: MatNonNegativeFloat = element(default=MaterialParameter(text=0.0))
@@ -1026,7 +1025,7 @@ class ViscoelasticMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"
 
 
 # Viscoelastic Material
-class ViscoelasticMaterialUC(MaterialBaseNoDensity, tag="material", extra="forbid"):
+class ViscoelasticMaterialUC(MaterialBase, tag="material", extra="forbid"):
     type: Literal["uncoupled viscoelastic"] = attr(default="uncoupled viscoelastic", frozen=True)
     k: MatPositiveFloat = element(default=MaterialParameter(text=10.0))
     g0: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
@@ -1162,12 +1161,75 @@ class SolventSupply(BaseXmlModel, tag="solvent_supply", extra="forbid"):
 
 class BiphasicMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"):
     type: Literal["biphasic"] = attr(default="biphasic", frozen=True)
-    fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
+    fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
     phi0: MatPositiveFloat = element(default=MaterialParameter(text=0.2))
     tau: NonNegativeFloat | None = element(default=None)
     solid: UnconstrainedMaterials | UncoupledMaterials | SolidMixture | SolidMixtureUC = element(default=NeoHookean(id=1), tag="solid")
     permeability: PermeabilityType = element(default=ConstantIsoPerm())
     solvent_supply: SolventSupply | None = element(default=None)
+    active_supply: MaterialParameter | None = element(default=None)
+
+
+class Diffusivity(BaseXmlModel, tag="diffusivity", validate_assignment=True, extra="forbid"):
+    name: str = attr(default="Diffusivity")
+    type: Literal["diff-const-iso"] = attr(default="diff-const-iso", frozen=True)
+    free_diff: MaterialParameter = element(default=MaterialParameter(text=1.0))
+    diff: MaterialParameter = element(default=MaterialParameter(text=1e-3))
+
+
+class Solubility(BaseXmlModel, tag="solubility", validate_assignment=True, extra="forbid"):
+    name: str = attr(default="Solubility")
+    type: Literal["solub-const"] = attr(default="solub-const", frozen=True)
+    solub: MaterialParameter = element(default=MaterialParameter(text=1.0))
+
+
+class Solute(BaseXmlModel, tag="solute", validate_assignment=True, extra="forbid"):
+    sol: int = attr()
+    diffusivity: Diffusivity = element(default=Diffusivity())
+    solubility: Solubility = element(default=Solubility())
+
+
+class SolidBoundMolecule(BaseXmlModel, tag="solid_bound", extra="forbid"):
+    sbm: int = attr()
+    rho0: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
+    rhomin: MatPositiveFloat = element(default=MaterialParameter(text=0.0))
+    rhomax: MatPositiveFloat | None = element(default=None)
+
+
+class OsmoticCoefficientConst(BaseXmlModel, tag="osmotic_coefficient", extra="forbid"):
+    type: Literal["osm-coef-const"] = attr(default="osm-coef-const", frozen=True)
+    osmcoef: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
+
+
+class OsmoticCoefficientManning(BaseXmlModel, tag="osmotic_coefficient", extra="forbid"):
+    type: Literal["osm-coef-Manning"] = attr(default="osm-coef-Manning", frozen=True)
+    ksi: MatPositiveFloat = element(default=MaterialParameter(text=1.0))
+    co_ion: MatPositiveFloat | None = element(default=None)
+
+
+class MultiphasicMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"):
+    type: Literal["multiphasic"] = attr(default="multiphasic", frozen=True)
+    fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
+    phi0: MatPositiveFloat = element(default=MaterialParameter(text=0.2))
+    fixed_charge_density: MaterialParameter = element(default=MaterialParameter(text=0.0))
+    solid: UnconstrainedMaterials | UncoupledMaterials | SolidMixture | SolidMixtureUC = element(default=NeoHookean(id=1), tag="solid")
+    permeability: PermeabilityType = element(default=ConstantIsoPerm())
+    osmotic_coefficient: OsmoticCoefficientConst | OsmoticCoefficientManning = element(default=OsmoticCoefficientConst())
+    solvent_supply: SolventSupply | None = element(default=None)
+    solute: list[Solute] | None = element(default=None)
+    solid_bound: list[SolidBoundMolecule] | None = element(default=None)
+
+    def add_solute(self, new_solute: Solute):
+        assert isinstance(new_solute, Solute), f"Expected Solute, got {type(new_solute)}"
+        if self.solute is None:
+            self.solute = []
+        self.solute.append(new_solute)
+
+    def add_sbm(self, new_sbm: SolidBoundMolecule):
+        assert isinstance(new_sbm, SolidBoundMolecule), f"Expected SolidBoundMolecule, got {type(new_sbm)}"
+        if self.solid_bound is None:
+            self.solid_bound = []
+        self.solid_bound.append(new_sbm)
 
 
 MaterialType = (
@@ -1180,6 +1242,7 @@ MaterialType = (
     | BiphasicMaterial
     | ViscoelasticMaterial
     | ViscoelasticMaterialUC
+    | MultiphasicMaterial
 )
 
 
