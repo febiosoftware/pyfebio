@@ -124,10 +124,15 @@ class Loads(BaseXmlModel, validate_assignment=True):
     all_body_loads: list[BodyLoadType] = element(default=[])
 
     def add_surface_load(self, new_load: PressureLoad | TractionLoad | FluidFlux | FluidPressure):
+        assert isinstance(new_load, (PressureLoad, TractionLoad, FluidFlux, FluidPressure)), (
+            "new_load must be a PressureLoad, TractionLoad, FluidFlux, or FluidPressure"
+        )
         self.all_surface_loads.append(new_load)
 
     def add_nodal_load(self, new_load: NodalLoadType):
+        assert isinstance(new_load, NodalLoadType), "new_load must be a NodalLoadType"
         self.all_nodal_loads.append(new_load)
 
     def add_body_load(self, new_load: BodyLoadType):
+        assert isinstance(new_load, BodyLoadType), "new_load must be a BodyLoadType"
         self.all_body_loads.append(new_load)

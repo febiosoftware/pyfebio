@@ -46,7 +46,9 @@ class MeshData(BaseXmlModel, validate_assignment=True):
     node_data: list[NodeData] = element(default=[], tag="NodeData")
 
     def add_element_data(self, new_element_data: ElementData):
+        assert isinstance(new_element_data, ElementData), "new_element_data must be an ElementData"
         self.element_data.append(new_element_data)
 
     def add_node_data(self, new_node_data: NodeData):
+        assert isinstance(new_node_data, NodeData), "new_node_data must be a NodeData"
         self.node_data.append(new_node_data)

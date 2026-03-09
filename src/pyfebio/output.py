@@ -404,6 +404,7 @@ class OutputPlotfile(BaseXmlModel, tag="plotfile", validate_assignment=True):
     all_vars: list[Var] = element(default=[], tag="var")
 
     def add_var(self, new_var: Var):
+        assert isinstance(new_var, Var), "new_var must be a Var"
         self.all_vars.append(new_var)
 
 
@@ -412,7 +413,9 @@ class Output(BaseXmlModel, validate_assignment=True):
     plotfile: list[OutputPlotfile] = element(default=[])
 
     def add_plotfile(self, new_plotfile: OutputPlotfile):
+        assert isinstance(new_plotfile, OutputPlotfile), "new_plotfile must be an OutputPlotfile"
         self.plotfile.append(new_plotfile)
 
     def add_logfile(self, new_logfile: OutputLogfile):
+        assert isinstance(new_logfile, OutputLogfile), "new_logfile must be an OutputLogfile"
         self.logfile.append(new_logfile)

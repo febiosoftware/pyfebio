@@ -29,6 +29,12 @@ def test_node_definition():
         feb.mesh.Node(id=1, text=("1.,2.,3.,4."))
 
 
+def test_bad_node_append():
+    mesh_obj = feb.mesh.Mesh(nodes=[feb.mesh.Nodes(all_nodes=[feb.mesh.Node(id=1, text=NODE_STRINGS[0])])])
+    with pytest.raises(ValidationError):
+        mesh_obj.add_node_domain(feb.mesh.Nodes(all_nodes=[feb.mesh.Node(id=1, text="1.0")]))
+
+
 def test_nodes_definition():
     nodes = feb.mesh.Nodes(name="Nodes1")
     for i, n in enumerate(NODE_STRINGS):

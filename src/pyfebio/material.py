@@ -1188,4 +1188,5 @@ class Material(BaseXmlModel, validate_assignment=True):
 
     def add_material(self, material: MaterialType):
         material.id = len(self.all_materials) + 1
+        assert isinstance(material, MaterialType), "material must be a MaterialType"
         self.all_materials.append(material)

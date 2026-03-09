@@ -38,4 +38,5 @@ class Constraints(BaseXmlModel, tag="Constraints", validate_assignment=True):
     all_constraints: list[ConstraintTypes] = element(default=[], tag="constraint")
 
     def add_constraint(self, new_constraint: ConstraintTypes):
+        assert isinstance(new_constraint, ConstraintTypes), "new_constraint must be a ConstraintTypes"
         self.all_constraints.append(new_constraint)

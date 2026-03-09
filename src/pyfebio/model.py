@@ -54,6 +54,7 @@ class FEBioRoot(BaseXmlModel, tag="febio_spec", validate_assignment=True):
     sections: list[SectionTypes] = element(default=[])
 
     def add_section(self, section: SectionTypes):
+        assert isinstance(section, SectionTypes), "section must be a SectionTypes"
         self.sections.append(section)
 
     def save(self, filename: str):

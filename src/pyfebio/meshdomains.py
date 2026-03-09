@@ -76,10 +76,13 @@ class MeshDomains(BaseXmlModel, validate_assignment=True):
     beam_domains: list[BeamDomain] = element(default=[], tag="BeamDomain")
 
     def add_solid_domain(self, new_solid_domain: SolidDomain):
+        assert isinstance(new_solid_domain, SolidDomain), "new_solid_domain must be a SolidDomain"
         self.solid_domains.append(new_solid_domain)
 
     def add_shell_domain(self, new_shell_domain: ShellDomain):
+        assert isinstance(new_shell_domain, ShellDomain), "new_shell_domain must be a ShellDomain"
         self.shell_domains.append(new_shell_domain)
 
     def add_beam_domain(self, new_beam_domain: BeamDomain):
+        assert isinstance(new_beam_domain, BeamDomain), "new_beam_domain must be a BeamDomain"
         self.beam_domains.append(new_beam_domain)

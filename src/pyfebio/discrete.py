@@ -103,11 +103,13 @@ class DiscreteEntry(BaseXmlModel, tag="discrete", validate_assignment=True):
 
 
 class Discrete(BaseXmlModel, validate_assignment=True):
-    discrete_materials: tuple[DiscreteMaterialType, ...] = element(default=())
-    discrete_elements: tuple[DiscreteEntry, ...] = element(default=())
+    discrete_materials: list[DiscreteMaterialType] = element(default=[])
+    discrete_elements: list[DiscreteEntry] = element(default=[])
 
     def add_discrete_material(self, new_material: DiscreteMaterialType):
-        self.discrete_materials += (new_material,)
+        assert isinstance(new_material, DiscreteMaterialType), "new_material must be a DiscreteMaterialType"
+        self.discrete_materials.append(new_material)
 
     def add_discrete_element(self, new_element: DiscreteEntry):
-        self.discrete_elements += (new_element,)
+        assert isinstance(new_element, DiscreteEntry), "new_element must be a DiscreteEntry"
+        self.discrete_elements.append(new_element)

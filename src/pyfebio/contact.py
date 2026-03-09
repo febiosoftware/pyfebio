@@ -165,6 +165,7 @@ class Contact(BaseXmlModel, tag="Contact", validate_assignment=True):
     all_contact_interfaces: list[ContactType] = element(default=[], tag="contact")
 
     def add_contact(self, new_contact: ContactType):
+        assert isinstance(new_contact, ContactType), "new_contact must be a ContactType"
         if new_contact.name is None:
             new_contact.name = f"{new_contact.type}_{len(self.all_contact_interfaces) + 1}"
         self.all_contact_interfaces.append(new_contact)

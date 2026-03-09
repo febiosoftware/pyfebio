@@ -24,4 +24,7 @@ class Initial(BaseXmlModel, validate_assignment=True):
     all_initial_conditions: list[InitialVelocity | InitialPrestrain] = element(default=[], tag="ic")
 
     def add_initial_condition(self, new_initial_condition: InitialVelocity | InitialPrestrain):
+        assert isinstance(new_initial_condition, (InitialVelocity, InitialPrestrain)), (
+            "new_initial_condition must be an InitialVelocity or InitialPrestrain"
+        )
         self.all_initial_conditions.append(new_initial_condition)

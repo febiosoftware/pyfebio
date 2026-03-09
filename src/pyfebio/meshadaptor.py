@@ -156,4 +156,5 @@ class MeshAdaptor(BaseXmlModel, tag="MeshAdaptor"):
     all_adaptors: list[AdaptorType] = element(default=[])
 
     def add_adaptor(self, adaptor: AdaptorType):
+        assert isinstance(adaptor, AdaptorType), "adaptor must be an AdaptorType"
         self.all_adaptors.append(adaptor)

@@ -27,7 +27,7 @@ BeamFEBioElementType = Literal["line2", "line3"]
 
 
 class Node(BaseXmlModel, tag="node", validate_assignment=True):
-    text: StringFloatVec3 = Field(default="0.0, 0.0, 0.0")
+    text: StringFloatVec3 = Field(default="0.0,0.0,0.0")
     id: int = attr()
 
 
@@ -36,6 +36,7 @@ class Nodes(BaseXmlModel, validate_assignment=True):
     all_nodes: list[Node] = element(tag="node", default=[])
 
     def add_node(self, new_node: Node):
+        assert isinstance(new_node, Node), "new_node must be an instance of Node"
         self.all_nodes.append(new_node)
 
 
@@ -246,7 +247,7 @@ class DiscreteSet(BaseXmlModel, tag="DiscreteSet", validate_assignment=True):
 
 
 class Mesh(BaseXmlModel, validate_assignment=True):
-    nodes: tuple[Nodes, ...] = element(default=(), tag="Nodes")
+    nodes: list[Nodes] = element(default=[], tag="Nodes")
     elements: list[Elements] = element(default=[], tag="Elements")
     surfaces: list[Surface] = element(default=[], tag="Surface")
     edges: list[Edge] = element(default=[], tag="Edge")
@@ -258,41 +259,49 @@ class Mesh(BaseXmlModel, validate_assignment=True):
     def add_node_domain(self, new_node_domain: Nodes):
         if not new_node_domain.name:
             new_node_domain.name = f"Part{len(self.nodes) + 1}"
-        self.nodes += (new_node_domain,)
+        assert isinstance(new_node_domain, Nodes), "new_node_domain must be an instance of Nodes"
+        self.nodes.append(new_node_domain)
 
     def add_element_domain(self, new_element_domain: Elements):
         if new_element_domain.name == "Part":
             new_element_domain.name = f"Part{len(self.elements) + 1}"
+        assert isinstance(new_element_domain, Elements), "new_element_domain must be an instance of Elements"
         self.elements.append(new_element_domain)
 
     def add_surface(self, new_surface: Surface):
         if not new_surface.name:
             new_surface.name = f"Surface{len(self.surfaces) + 1}"
+        assert isinstance(new_surface, Surface), "new_surface must be an instance of Surface"
         self.surfaces.append(new_surface)
 
     def add_edge(self, new_edge: Edge):
         if not new_edge.name:
             new_edge.name = f"Edge{len(self.edges) + 1}"
+        assert isinstance(new_edge, Edge), "new_edge must be an instance of Edge"
         self.edges.append(new_edge)
 
     def add_element_set(self, new_element_set: ElementSet):
         if not new_element_set.name:
             new_element_set.name = f"ElementSet{len(self.element_sets) + 1}"
+        assert isinstance(new_element_set, ElementSet), "new_element_set must be an instance of ElementSet"
         self.element_sets.append(new_element_set)
 
     def add_node_set(self, new_node_set: NodeSet):
         if not new_node_set.name:
             new_node_set.name = f"NodeSet{len(self.node_sets) + 1}"
+        assert isinstance(new_node_set, NodeSet), "new_node_set must be an instance of NodeSet"
         self.node_sets.append(new_node_set)
 
     def add_discrete_set(self, new_discrete_set: DiscreteSet):
         if not new_discrete_set.name:
             new_discrete_set.name = f"DiscreteSet{len(self.discrete_sets) + 1}"
+        assert isinstance(new_discrete_set, DiscreteSet), "new_discrete_set must be an instance of DiscreteSet"
         self.discrete_sets.append(new_discrete_set)
 
     def add_surface_pair(self, new_surface_pair: SurfacePair):
         if not new_surface_pair.name:
             new_surface_pair.name = f"SurfacePair{len(self.surface_pairs) + 1}"
+        assert isinstance(new_surface_pair, SurfacePair), "new_surface_pair must be an instance of SurfacePair"
         self.surface_pairs.append(new_surface_pair)
 
 
@@ -394,5 +403,5 @@ def translate_meshio(
                 node_sets = sorted(set(node_set))
                 febio_mesh.node_sets.append(NodeSet(name=set_name, text=",".join(map(str, node_sets))))
                 febio_mesh.surfaces.append(surface_object)
-    febio_mesh.nodes += (nodes_object,)
+    febio_mesh.nodes.append(nodes_object)
     return febio_mesh

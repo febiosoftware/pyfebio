@@ -300,16 +300,22 @@ class Rigid(BaseXmlModel, tag="Rigid", validate_assignment=True):
         self,
         new_rigid_bc: RigidBCType,
     ):
+        assert isinstance(new_rigid_bc, RigidBCType), "new_rigid_bc must be a RigidBCType"
         self.all_rigid_bcs.append(new_rigid_bc)
 
     def add_rigid_load(
         self,
         new_rigid_load: RigidLoadType,
     ):
+        assert isinstance(new_rigid_load, RigidLoadType), "new_rigid_load must be a RigidLoadType"
         self.all_rigid_loads.append(new_rigid_load)
 
     def add_rigid_connector(self, new_rigid_connector: RigidConnectorType):
+        assert isinstance(new_rigid_connector, RigidConnectorType), "new_rigid_connector must be a RigidConnectorType"
         self.all_rigid_connectors.append(new_rigid_connector)
 
     def add_rigid_initial_condition(self, new_rigid_initial_condition: RigidInitialConditionType):
+        assert isinstance(new_rigid_initial_condition, RigidInitialConditionType), (
+            "new_rigid_initial_condition must be a RigidInitialConditionType"
+        )
         self.all_rigid_initial_conditions.append(new_rigid_initial_condition)
