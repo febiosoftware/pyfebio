@@ -52,6 +52,7 @@ class Solver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     max_refs: int = element(default=15, ge=0)
     diverge_reform: Literal[0, 1] = element(default=1)
     min_residual: float = element(default=1e-20, gt=0.0)
+    force_positive_concentrations: Literal[0, 1] | None = element(default=None)
     qn_method: QuasiNewtonMethod = element(default=QuasiNewtonMethod())
     symmetric_stiffness: Literal["symmetric", "non-symmetric", "symmetric-structure"] = element(default="non-symmetric")
     equation_scheme: Literal["staggered", "block"] = element(default="staggered")
