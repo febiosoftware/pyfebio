@@ -1207,6 +1207,23 @@ class OsmoticCoefficientManning(BaseXmlModel, tag="osmotic_coefficient", extra="
     co_ion: MatPositiveFloat | None = element(default=None)
 
 
+class BiphasicSoluteMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"):
+    type: Literal["biphasic-solute"] = attr(default="biphasic-solute", frozen=True)
+    fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
+    phi0: MatPositiveFloat = element(default=MaterialParameter(text=0.2))
+    solid: UnconstrainedMaterials | UncoupledMaterials | SolidMixture | SolidMixtureUC = element(default=NeoHookean(id=1), tag="solid")
+    permeability: PermeabilityType = element(default=ConstantIsoPerm())
+    osmotic_coefficient: OsmoticCoefficientConst | OsmoticCoefficientManning = element(default=OsmoticCoefficientConst())
+    solvent_supply: SolventSupply | None = element(default=None)
+    solute: list[Solute] | None = element(default=None)
+
+    def add_solute(self, new_solute: Solute):
+        assert isinstance(new_solute, Solute), f"Expected Solute, got {type(new_solute)}"
+        if self.solute is None:
+            self.solute = []
+        self.solute.append(new_solute)
+
+
 class MultiphasicMaterial(MaterialBaseNoDensity, tag="material", extra="forbid"):
     type: Literal["multiphasic"] = attr(default="multiphasic", frozen=True)
     fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
@@ -1242,6 +1259,7 @@ MaterialType = (
     | BiphasicMaterial
     | ViscoelasticMaterial
     | ViscoelasticMaterialUC
+    | BiphasicSoluteMaterial
     | MultiphasicMaterial
 )
 
