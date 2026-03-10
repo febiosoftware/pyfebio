@@ -337,8 +337,8 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ☑️ Element-wise, mapped, or math parameter defintion
   - ✅ Biphasic Materials
   - ✅ Viscoelastic Materials
-  - ❌ Multiphasic Materials
-  - ❌ Biphasic-solute Materials
+  - ☑️ Biphasic-solute Materials
+  - ✅ Multiphasic Materials
   - ❌ Chemical Reactions
   - ❌ Active Contraction Materials
   - ❌ Damage Materials
@@ -372,6 +372,8 @@ Brief overview, see module documentation for more details. Unchecked are not yet
 - Initial
   - ☑️ Initial Velocity
   - ☑️ Initial Pre-strain
+  - ✅ Initial Concentration
+  - ✅ Initial Fluid Pressure
 - Loads
   - ✅ Nodal Loads
     - ✅ nodal_load
