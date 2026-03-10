@@ -986,7 +986,7 @@ class SolidMixture(MaterialBase, tag="material", extra="forbid"):
         self,
         new_solid: UnconstrainedMaterials | FiberModel | ContinuousFiberDistribution | EvolvingUnconstrainedMaterials,
     ):
-        assert isinstance(new_solid, (UnconstrainedMaterials, FiberModel, ContinuousFiberDistribution, EvolvingUnconstrainedMaterials)), (
+        assert isinstance(new_solid, UnconstrainedMaterials | FiberModel | ContinuousFiberDistribution | EvolvingUnconstrainedMaterials), (
             "new_solid must be an UnconstrainedMaterials, FiberModel, ContinuousFiberDistribution, or EvolvingUnconstrainedMaterials"
         )
         self.solid_list.append(new_solid)
@@ -999,7 +999,7 @@ class SolidMixtureUC(MaterialBase, tag="material", extra="forbid"):
     k: MatPositiveFloat = MaterialParameter(text=1000.0)
 
     def add_solid(self, new_solid: UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC):
-        assert isinstance(new_solid, (UncoupledMaterials, FiberModelUC, ContinuousFiberDistributionUC)), (
+        assert isinstance(new_solid, UncoupledMaterials | FiberModelUC | ContinuousFiberDistributionUC), (
             "new_solid must be an UncoupledMaterials, FiberModelUC, or ContinuousFiberDistributionUC"
         )
         self.solid_list.append(new_solid)
@@ -1211,7 +1211,7 @@ class MultiphasicMaterial(MaterialBaseNoDensity, tag="material", extra="forbid")
     type: Literal["multiphasic"] = attr(default="multiphasic", frozen=True)
     fluid_density: MatPositiveFloat = element(default=MaterialParameter(text=1.0e-6))
     phi0: MatPositiveFloat = element(default=MaterialParameter(text=0.2))
-    fixed_charge_density: MaterialParameter = element(default=MaterialParameter(text=0.0))
+    fixed_charge_density: MaterialParameter | DynamicMaterialParameter = element(default=MaterialParameter(text=0.0))
     solid: UnconstrainedMaterials | UncoupledMaterials | SolidMixture | SolidMixtureUC = element(default=NeoHookean(id=1), tag="solid")
     permeability: PermeabilityType = element(default=ConstantIsoPerm())
     osmotic_coefficient: OsmoticCoefficientConst | OsmoticCoefficientManning = element(default=OsmoticCoefficientConst())
