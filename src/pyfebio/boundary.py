@@ -86,6 +86,51 @@ class BCNormalDisplacement(BaseXmlModel, tag="bc", validate_assignment=True):
     surface_hint: Literal[0, 1] = element(default=0)
 
 
+class BCZeroConcentration(BaseXmlModel, tag="bc", validate_assignment=True):
+    """
+    Assign a zero concentration boundary condition for a solute to a node set.
+    Hint: c_dof should be a string of the form "c{solute id}" e.g. "c1", "c2", etc.
+    """
+
+    type: Literal["zero concentration"] = attr(default="zero concentration", frozen=True)
+    node_set: str = attr()
+    c_dof: str = element()
+
+
+class BCPrescribedConcentration(BaseXmlModel, tag="bc", validate_assignment=True):
+    """
+    Assign a prescribed concentration of a solute to a node set.
+    Hint: dof should be a string of the form "c{solute id}" e.g. "c1", "c2", etc.
+    """
+
+    type: Literal["prescribed concentration"] = attr(default="prescribed concentration", frozen=True)
+    node_set: str = attr()
+    dof: str = element()
+    value: Value = element()
+    relative: Literal[0, 1] = element(default=0)
+
+
+class MatchingOsmCoefficient(BaseXmlModel, tag="bc", validate_assignment=True):
+    type: Literal["matching_osm_coef"] = attr(default="matching_osm_coeff", frozen=True)
+    surface: str = attr()
+    ambient_pressure: float = element()
+    ambient_osmolarity: float = element()
+    shell_bottom: Literal[0, 1] = element(default=0)
+
+
+class ChildDof(BaseXmlModel, tag="child_dof", validate_assignment=True):
+    node: int = element()
+    dof: Literal["x", "y", "z", "p"] = element()
+    value: float = element()
+
+
+class BCLinearConstraint(BaseXmlModel, tag="bc", validate_assignment=True):
+    type: Literal["linear constraint"] = attr(default="linear constraint", frozen=True)
+    node: int = element()
+    dof: Literal["x", "y", "z", "p"] = element()
+    child_dof: list[ChildDof] = element(default=[])
+
+
 BoundaryConditionType = (
     BCZeroDisplacement
     | BCZeroShellDisplacement
@@ -97,6 +142,9 @@ BoundaryConditionType = (
     | BCRigid
     | BCRigidDeformation
     | BCNormalDisplacement
+    | BCZeroConcentration
+    | BCPrescribedConcentration
+    | BCLinearConstraint
 )
 
 
