@@ -144,7 +144,7 @@ class MultiphasicModel(Model):
     control_: control.Control | None = element(
         default=control.Control(
             analysis="TRANSIENT",
-            solver=control.Solver(type="multiphasic", ptol=0.01, ctol=0.01),
+            solver=control.Solver(type="multiphasic", ptol=0.01, ctol=0.01, force_positive_concentrations=1),
             time_steps=100,
             step_size=0.1,
             time_stepper=control.TimeStepper(dtmax=control.TimeStepValue(text=0.1)),
