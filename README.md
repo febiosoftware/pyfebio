@@ -411,6 +411,10 @@ Brief overview, see module documentation for more details. Unchecked are not yet
   - ✅ Rigid Node Set Deformation (rotation about axis)
   - ✅ Zero Fluid Pressure
   - ✅ Prescribed Fluid Pressure
+  - ✅ Zero Concentration
+  - ✅ Prescribed Concentration
+  - ✅ Linear Constraint
+  
 - Constraints
   - ☑️ Symmetry Plane
   - ☑️ Prestrain

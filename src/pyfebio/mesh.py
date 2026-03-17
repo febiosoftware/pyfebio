@@ -1,3 +1,4 @@
+import itertools
 from typing import Literal
 
 import meshio
@@ -329,6 +330,8 @@ def translate_meshio(
     elementoffset: int = 0,
     surfaceoffset: int = 0,
     shell_sets: list[str] | None = None,
+    elements_name: str | None = None,
+    nodes_name: str | None = None,
 ) -> Mesh:
     if shell_sets is None:
         shell_sets = []
@@ -342,19 +345,61 @@ def translate_meshio(
     for key, values in meshobj.cells_dict.items():
         make_element[key] = []
         if meshio._mesh.topological_dimension[key] == 2:
-            for element in values:
-                make_element[key].append(bool(set(np.unique(element.ravel())).difference(solid_nodes)))
+            if not solid_nodes:
+                make_element[key].extend([False] * len(values))
+            else:
+                for element in values:
+                    make_element[key].append(bool(set(element.ravel()).difference(solid_nodes)))
         else:
             make_element[key].extend([True] * len(values))
 
     febio_mesh = Mesh()
-    nodes_object = Nodes()
+    if nodes_name is None:
+        nodes_name = "Part"
+    nodes_object = Nodes(name=nodes_name)
     for i, node in enumerate(meshobj.points):
         nodes_object.add_node(Node(id=i + 1 + nodeoffset, text=",".join(map(str, node))))
     num_elements = 0
     num_surface_elements = 0
+    if not meshobj.cell_sets_dict:
+        cell_sets = set(itertools.chain(*meshobj.cell_tags.values()))  # type:ignore
+        cell_sets = {set_name: [] for set_name in cell_sets}
+        for cell_tags in meshobj.cell_data["cell_tags"]:
+            unique_tags = np.unique(cell_tags)
+            tmp_cell_sets = {set_name: [] for set_name in cell_sets}
+            for tag, set_names in meshobj.cell_tags.items():  # type: ignore
+                if tag in unique_tags:
+                    for set_name in set_names:
+                        tmp_cell_sets[set_name].append(np.argwhere(cell_tags == tag).ravel())
+                else:
+                    for set_name in set_names:
+                        tmp_cell_sets[set_name].append(np.array([]))
+            for key, value in cell_sets.items():
+                cell_sets[key].append(np.concatenate(tmp_cell_sets[key]))
+
+        meshobj.cell_sets = cell_sets
+
+    # hex27 are ordered incorrectly
     hex27_reorder = [2, 6, 7, 3, 1, 5, 4, 0, 18, 14, 19, 10, 17, 12, 16, 8, 9, 13, 15, 11]
     hex27_reorder.extend([21, 25, 20, 24, 23, 22, 26])
+    if not solid_nodes:
+        for cell_block in meshobj.cells:
+            if elements_name is None:
+                part_name = cell_block.type
+            else:
+                part_name = elements_name
+            etype = ELEMENT_MAP[cell_block.type]
+            elements_object = Elements(name=part_name, type=etype)
+            for offset in range(cell_block.data.shape[0]):
+                element = cell_block.data[offset, :]
+                num_elements += 1
+                elements_object.add_element(
+                    ELEMENT_CLASS_MAP[etype](
+                        id=num_elements + elementoffset,
+                        text=",".join(map(str, element + 1 + nodeoffset)),
+                    )
+                )
+            febio_mesh.elements.append(elements_object)
     for name, members in meshobj.cell_sets_dict.items():
         if any([exclude in name.lower() for exclude in EXCLUDE_SET_STR]):
             continue
@@ -376,7 +421,7 @@ def translate_meshio(
                     elements_object.add_element(
                         ELEMENT_CLASS_MAP[etype](
                             id=num_elements + elementoffset,
-                            text=",".join(map(str, element + 1)),
+                            text=",".join(map(str, element + 1 + nodeoffset)),
                         )
                     )
                 febio_mesh.elements.append(elements_object)
@@ -396,7 +441,7 @@ def translate_meshio(
                     fn_map[ELEMENT_MAP[member]](
                         ELEMENT_CLASS_MAP[etype](
                             id=num_surface_elements + surfaceoffset,
-                            text=",".join(map(str, element + 1)),
+                            text=",".join(map(str, element + 1 + nodeoffset)),
                         )
                     )
                     node_set.extend((element + 1).tolist())
