@@ -1,4 +1,5 @@
 import itertools
+from io import StringIO
 from typing import Literal
 
 import meshio
@@ -321,6 +322,50 @@ ELEMENT_MAP: dict[str, SolidFEBioElementType | ShellFEBioElementType | BeamFEBio
     "line3": "line3",
 }
 
+
+def _numpy_to_string_array(arr: np.ndarray, fmt: str) -> list[str]:
+    """
+    Using np.savetxt with a StringIO buffer is ~4X faster than using [",".join(map(str, row)) for row in arr]
+    """
+
+    buffer = StringIO()
+    np.savetxt(buffer, arr, delimiter=",", fmt=fmt)
+    buffer.seek(0)
+    return buffer.read().splitlines()
+
+
+def numpy_to_nodes(nodes: np.ndarray, name: str = "Part", offset: int = 0) -> Nodes:
+    if nodes.ndim == 1:
+        nodes = nodes.reshape(1, 3)
+    str_array = _numpy_to_string_array(nodes, fmt="%e")
+    return Nodes(name=name, all_nodes=[Node(id=i + offset + 1, text=line) for i, line in enumerate(str_array)])
+
+
+def numpy_to_elements(
+    elements: np.ndarray,
+    element_type: SolidFEBioElementType | ShellFEBioElementType | BeamFEBioElementType,
+    name: str = "Part",
+    offset: int = 0,
+) -> Elements:
+    if elements.ndim == 1:
+        elements = elements.reshape(1, elements.size)
+    str_array = _numpy_to_string_array(elements, fmt="%d")
+    elem_class = ELEMENT_CLASS_MAP[element_type]
+    return Elements(
+        name=name, type=element_type, all_elements=[elem_class(id=i + offset + 1, text=line) for i, line in enumerate(str_array)]
+    )
+
+
+def numpy_to_surface_list(
+    facets: np.ndarray,
+    element_type: ShellFEBioElementType,
+    offset: int = 0,
+) -> list[ShellFEBioElementType]:
+    str_array = _numpy_to_string_array(facets, fmt="%d")
+    elem_class = ELEMENT_CLASS_MAP[element_type]
+    return [elem_class(id=i + offset + 1, text=line) for i, line in enumerate(str_array)]  # type:ignore
+
+
 EXCLUDE_SET_STR = ("gmsh:bounding_entities",)
 
 
@@ -332,6 +377,7 @@ def translate_meshio(
     shell_sets: list[str] | None = None,
     elements_name: str | None = None,
     nodes_name: str | None = None,
+    node_sets_from_surfaces: bool = False,
 ) -> Mesh:
     if shell_sets is None:
         shell_sets = []
@@ -356,11 +402,9 @@ def translate_meshio(
     febio_mesh = Mesh()
     if nodes_name is None:
         nodes_name = "Part"
-    nodes_object = Nodes(name=nodes_name)
-    for i, node in enumerate(meshobj.points):
-        nodes_object.add_node(Node(id=i + 1 + nodeoffset, text=",".join(map(str, node))))
+    nodes_object = numpy_to_nodes(nodes=meshobj.points, name=nodes_name, offset=nodeoffset)
+    febio_mesh.add_node_domain(nodes_object)
     num_elements = 0
-    num_surface_elements = 0
     if not meshobj.cell_sets_dict:
         cell_sets = set(itertools.chain(*meshobj.cell_tags.values()))  # type:ignore
         cell_sets = {set_name: [] for set_name in cell_sets}
@@ -389,17 +433,11 @@ def translate_meshio(
             else:
                 part_name = elements_name
             etype = ELEMENT_MAP[cell_block.type]
-            elements_object = Elements(name=part_name, type=etype)
-            for offset in range(cell_block.data.shape[0]):
-                element = cell_block.data[offset, :]
-                num_elements += 1
-                elements_object.add_element(
-                    ELEMENT_CLASS_MAP[etype](
-                        id=num_elements + elementoffset,
-                        text=",".join(map(str, element + 1 + nodeoffset)),
-                    )
-                )
-            febio_mesh.elements.append(elements_object)
+            elements_object = numpy_to_elements(
+                elements=cell_block.data + 1 + nodeoffset, element_type=etype, name=part_name, offset=num_elements + elementoffset
+            )
+            num_elements += cell_block.data.shape[0]
+            febio_mesh.add_element_domain(elements_object)
     for name, members in meshobj.cell_sets_dict.items():
         if any([exclude in name.lower() for exclude in EXCLUDE_SET_STR]):
             continue
@@ -411,42 +449,34 @@ def translate_meshio(
                 set_name = name
             etype = ELEMENT_MAP[member]
             if shell_set or np.array(make_element[member])[offsets].all():
-                elements_object = Elements(name=set_name, type=etype)
-                for offset in offsets:
-                    element = meshobj.cells_dict[member][offset]
-                    if etype == "hex27":
-                        element = element[hex27_reorder]
-
-                    num_elements += 1
-                    elements_object.add_element(
-                        ELEMENT_CLASS_MAP[etype](
-                            id=num_elements + elementoffset,
-                            text=",".join(map(str, element + 1 + nodeoffset)),
-                        )
-                    )
-                febio_mesh.elements.append(elements_object)
+                if etype == "hex27":
+                    elements = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
+                    elements = elements[:, hex27_reorder]
+                else:
+                    elements = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
+                elements_object = numpy_to_elements(
+                    elements=elements,
+                    element_type=etype,
+                    name=set_name,
+                    offset=num_elements + elementoffset,
+                )
+                num_elements += meshobj.cells_dict[member][offsets].shape[0]
+                febio_mesh.add_element_domain(elements_object)
             else:
                 surface_object = Surface(name=set_name)
                 fn_map = {
-                    "tri3": surface_object.add_tri3,
-                    "tri6": surface_object.add_tri6,
-                    "quad4": surface_object.add_quad4,
-                    "quad8": surface_object.add_quad8,
-                    "quad9": surface_object.add_quad9,
+                    "tri3": surface_object.all_tri3,
+                    "tri6": surface_object.all_tri6,
+                    "quad4": surface_object.all_quad4,
+                    "quad8": surface_object.all_quad8,
+                    "quad9": surface_object.all_quad9,
                 }
-                node_set = []
-                for offset in offsets:
-                    num_surface_elements += 1
-                    element = meshobj.cells_dict[member][offset]
-                    fn_map[ELEMENT_MAP[member]](
-                        ELEMENT_CLASS_MAP[etype](
-                            id=num_surface_elements + surfaceoffset,
-                            text=",".join(map(str, element + 1 + nodeoffset)),
-                        )
-                    )
-                    node_set.extend((element + 1).tolist())
-                node_sets = sorted(set(node_set))
-                febio_mesh.node_sets.append(NodeSet(name=set_name, text=",".join(map(str, node_sets))))
-                febio_mesh.surfaces.append(surface_object)
-    febio_mesh.nodes.append(nodes_object)
+                etype = ELEMENT_MAP[member]
+                facets = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
+                surface_list = numpy_to_surface_list(facets=facets, element_type=etype, offset=surfaceoffset)  # type:ignore
+                fn_map[etype].extend(surface_list)
+                if node_sets_from_surfaces:
+                    node_set = ",".join(map(str, sorted(np.unique(facets.ravel()))))
+                    febio_mesh.add_node_set(NodeSet(name=set_name, text=node_set))
+                febio_mesh.add_surface(surface_object)
     return febio_mesh
