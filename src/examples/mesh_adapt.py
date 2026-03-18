@@ -6,7 +6,7 @@ import pyfebio as feb
 from_gmsh = meshio.gmsh.read("../../assets/gmsh/hex8.msh")
 
 # convert the meshio object to febio mesh
-mesh = feb.mesh.translate_meshio(from_gmsh)
+mesh = feb.mesh.translate_meshio(from_gmsh, node_sets_from_surfaces=True)
 
 # crete a base febio model but override the control section to have constant time step
 my_model = feb.model.Model(mesh_=mesh, control_=feb.control.Control(time_steps=10, step_size=0.1, time_stepper=None))

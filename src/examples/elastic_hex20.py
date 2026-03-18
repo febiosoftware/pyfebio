@@ -5,7 +5,7 @@ import pyfebio as feb
 # import a mesh from gmsh format
 from_gmsh = meshio.gmsh.read("../../assets/gmsh/hex20.msh")
 # use translation function to convert meshio object to an febio mesh
-mesh = feb.mesh.translate_meshio(from_gmsh)
+mesh = feb.mesh.translate_meshio(from_gmsh, node_sets_from_surfaces=True)
 
 # creat a base febio model
 my_model = feb.model.Model(mesh_=mesh)

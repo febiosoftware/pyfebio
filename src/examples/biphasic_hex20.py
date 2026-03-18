@@ -5,7 +5,7 @@ import pyfebio as feb
 # import mesh from gmsh format
 from_gmsh = read("../../assets/gmsh/hex20.msh")
 # translate meshio mesh to febio mesh
-mesh = feb.mesh.translate_meshio(from_gmsh)
+mesh = feb.mesh.translate_meshio(from_gmsh, node_sets_from_surfaces=True)
 
 # initialize a biphasic febio modelk
 my_model = feb.model.BiphasicModel(mesh_=mesh)

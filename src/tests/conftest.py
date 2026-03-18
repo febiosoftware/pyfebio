@@ -39,57 +39,57 @@ def hex27_meshio() -> meshio.Mesh:
 
 @pytest.fixture(scope="session")
 def tet4_febmesh(tet4_meshio) -> mesh.Mesh:
-    return mesh.translate_meshio(tet4_meshio)
+    return mesh.translate_meshio(tet4_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def tet10_febmesh(tet10_meshio) -> mesh.Mesh:
-    return mesh.translate_meshio(tet10_meshio)
+    return mesh.translate_meshio(tet10_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex8_febmesh(hex8_meshio) -> mesh.Mesh:
-    return mesh.translate_meshio(hex8_meshio)
+    return mesh.translate_meshio(hex8_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex20_febmesh(hex20_meshio) -> mesh.Mesh:
-    return mesh.translate_meshio(hex20_meshio)
+    return mesh.translate_meshio(hex20_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex27_febmesh(hex27_meshio) -> mesh.Mesh:
-    return mesh.translate_meshio(hex27_meshio)
+    return mesh.translate_meshio(hex27_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def tet4_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("tet4_contact.msh"))
-    return mesh.translate_meshio(mesh_obj)
+    return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def tet10_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("tet10_contact.msh"))
-    return mesh.translate_meshio(mesh_obj)
+    return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex8_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.read(GMSH_DIR.joinpath("hex8_contact.msh"), file_format="gmsh")
-    return mesh.translate_meshio(mesh_obj)
+    return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex20_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("hex20_contact.msh"))
-    return mesh.translate_meshio(mesh_obj)
+    return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
 def hex27_contact_febmesh() -> mesh.Mesh:
     mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("hex27_contact.msh"))
-    return mesh.translate_meshio(mesh_obj)
+    return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
