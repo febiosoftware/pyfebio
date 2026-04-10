@@ -423,13 +423,23 @@ def translate_meshio(
 
         meshobj.cell_sets = cell_sets
 
+    if hasattr(meshobj, "point_tags"):
+        node_sets = {}
+        for tag, set_names in meshobj.point_tags.items():  # type: ignore
+            node_sets.setdefault(set_names[0], [])
+            node_ids = list(np.argwhere(meshobj.point_data["point_tags"] == tag).ravel() + 1 + nodeoffset)
+            node_sets[set_names[0]].extend(node_ids)
+        for set_name, members in node_sets.items():
+            node_set = NodeSet(name=set_name, text=",".join(map(str, members)))
+            febio_mesh.add_node_set(node_set)
+
     # hex27 are ordered incorrectly
     hex27_reorder = [2, 6, 7, 3, 1, 5, 4, 0, 18, 14, 19, 10, 17, 12, 16, 8, 9, 13, 15, 11]
     hex27_reorder.extend([21, 25, 20, 24, 23, 22, 26])
-    if not solid_nodes:
-        for cell_block in meshobj.cells:
+    if not solid_nodes and not shell_sets:
+        for block_id, cell_block in enumerate(meshobj.cells):
             if elements_name is None:
-                part_name = cell_block.type
+                part_name = f"{cell_block.type}_{block_id + 1}"
             else:
                 part_name = elements_name
             etype = ELEMENT_MAP[cell_block.type]
