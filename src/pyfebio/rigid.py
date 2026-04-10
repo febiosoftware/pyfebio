@@ -10,7 +10,7 @@ from ._types import (
 
 class Value(BaseXmlModel, validate_assignment=True):
     lc: int | None = attr(default=None)
-    text: float = 1.0
+    text: float | StringFloatVec3 = 1.0
 
 
 class RigidFixed(BaseXmlModel, tag="rigid_bc", validate_assignment=True):
@@ -96,7 +96,7 @@ class RigidFollowerForceLoad(BaseXmlModel, tag="rigid_load", validate_assignment
     rb: str = element()
     insertion: StringFloatVec3 = element()
     relative: Literal[0, 1] = element(default=0)
-    force: StringFloatVec3 = element()
+    force: Value = element()
 
 
 class RigidMomentLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
@@ -110,7 +110,7 @@ class RigidMomentLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
 class RigidFollowerMomentLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
     type: Literal["rigid_follower_moment"] = attr(default="rigid_follower_moment", frozen=True)
     rb: str = element()
-    moment: StringFloatVec3 = element()
+    moment: Value = element()
 
 
 class RigidCableLoad(BaseXmlModel, tag="rigid_load", validate_assignment=True):
