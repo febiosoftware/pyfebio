@@ -67,6 +67,7 @@ class BCPrescribedDeformation(BaseXmlModel, tag="bc", validate_assignment=True):
 
 class BCRigid(BaseXmlModel, tag="bc", validate_assignment=True):
     type: Literal["rigid"] = attr(default="rigid", frozen=True)
+    name: str = attr(default="rigid")
     node_set: str = attr()
     rb: str = element()
 
