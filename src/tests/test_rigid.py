@@ -417,7 +417,7 @@ def test_rigid_follower_moment(base_model, tmp_path):
     my_model.rigid_.add_rigid_bc(
         feb.rigid.RigidPrescribed(type="rigid_displacement", rb="bodyB", dof="y", value=feb.rigid.Value(lc=1, text=3.0))
     )
-    follower_moment = feb.rigid.RigidFollowerMomentLoad(rb="bodyB", moment="1.0e-3,0.0,0.0")
+    follower_moment = feb.rigid.RigidFollowerMomentLoad(rb="bodyB", moment=feb.rigid.Value(text="1.0e-3,0.0,0.0"))
     my_model.rigid_.add_rigid_load(follower_moment)
     my_model.loaddata_.add_load_curve(feb.loaddata.LoadCurve(id=1, points=feb.loaddata.CurvePoints(points=["0.0,0.0", "10.0,1.0"])))
     outputs = feb.output.OutputPlotfile(
@@ -436,7 +436,7 @@ def test_rigid_follower_force(base_model, tmp_path):
     my_model.control_.step_size = 0.1
     my_model.control_.time_stepper = None
     my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyB", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
-    follower_moment = feb.rigid.RigidFollowerForceLoad(rb="bodyB", insertion="1.0,0.5,9.0", force="0.0,-1.0e-4,0.0")
+    follower_moment = feb.rigid.RigidFollowerForceLoad(rb="bodyB", insertion="1.0,0.5,9.0", force=feb.rigid.Value(text="0.0,-1.0e-4,0.0"))
     my_model.rigid_.add_rigid_load(follower_moment)
     outputs = feb.output.OutputPlotfile(
         all_vars=[
