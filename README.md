@@ -1,4 +1,6 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/pyfebio?logoColor=blue&color=blue)](https://pypi.org/project/pyfebio/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20315282.svg)](https://doi.org/10.5281/zenodo.20315282)
+
 
 ## Overview
 
