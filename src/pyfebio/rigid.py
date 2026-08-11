@@ -14,8 +14,6 @@ class Value(BaseXmlModel, validate_assignment=True):
 
 
 class RigidFixed(BaseXmlModel, tag="rigid_bc", validate_assignment=True):
-    """ """
-
     type: Literal["rigid_fixed"] = attr(default="rigid_fixed", frozen=True)
     rb: str = element()
     Rx_dof: Literal[0, 1] = element(default=0)
@@ -130,8 +128,6 @@ class RigidConnector(
     tag="rigid_connector",
     validate_assignment=True,
 ):
-    """ """
-
     name: str = attr()
     body_a: str = element()
     body_b: str = element()

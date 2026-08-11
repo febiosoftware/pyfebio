@@ -154,6 +154,6 @@ class MultiphasicModel(Model):
 
 def run_model(filepath: str | Path, silent: bool = False) -> int:
     if silent:
-        return subprocess.run(f"febio4 -i {filepath} -silent", shell=True).returncode
+        return subprocess.run(f"febio4 -i {filepath} -silent", shell=True, check=False).returncode
     else:
-        return subprocess.run(f"febio4 -i {filepath}", shell=True).returncode
+        return subprocess.run(f"febio4 -i {filepath}", shell=True, check=False).returncode

@@ -178,12 +178,20 @@ class Elements(BaseXmlModel, tag="elements", validate_assignment=True):
         return self
 
 
+class PartList(BaseXmlModel, tag="PartList", validate_assignment=True):
+    name: str = attr(default="allParts")
+    text: str = ""
+
+    def add_part(self, new_part: str):
+        self.text = f"{self.text},{new_part}"
+
+
 class ElementSet(BaseXmlModel, tag="ElementSet", validate_assignment=True):
     name: str = attr(default="")
     text: StringUIntVec
 
     def add_element(self, new_element_id: int):
-        ",".join([self.text, str(new_element_id)])
+        self.text = f"{self.text},{new_element_id}"
 
 
 class NodeSet(BaseXmlModel, tag="NodeSet", validate_assignment=True):
@@ -251,6 +259,7 @@ class DiscreteSet(BaseXmlModel, tag="DiscreteSet", validate_assignment=True):
 class Mesh(BaseXmlModel, validate_assignment=True):
     nodes: list[Nodes] = element(default=[], tag="Nodes")
     elements: list[Elements] = element(default=[], tag="Elements")
+    part_lists: list[PartList] = element(default=[], tag="PartList")
     surfaces: list[Surface] = element(default=[], tag="Surface")
     edges: list[Edge] = element(default=[], tag="Edge")
     element_sets: list[ElementSet] = element(default=[], tag="ElementSet")
@@ -305,6 +314,12 @@ class Mesh(BaseXmlModel, validate_assignment=True):
             new_surface_pair.name = f"SurfacePair{len(self.surface_pairs) + 1}"
         assert isinstance(new_surface_pair, SurfacePair), "new_surface_pair must be an instance of SurfacePair"
         self.surface_pairs.append(new_surface_pair)
+
+    def add_part_list(self, new_part_list: PartList):
+        if not new_part_list.name:
+            new_part_list.name = f"PartList{len(self.part_lists) + 1}"
+        assert isinstance(new_part_list, PartList), "new_part_list must be an instance of PartList"
+        self.part_lists.append(new_part_list)
 
 
 ELEMENT_MAP: dict[str, SolidFEBioElementType | ShellFEBioElementType | BeamFEBioElementType] = {
@@ -419,7 +434,7 @@ def translate_meshio(
                     for set_name in set_names:
                         tmp_cell_sets[set_name].append(np.array([]))
             for key, value in cell_sets.items():
-                cell_sets[key].append(np.concatenate(tmp_cell_sets[key]))
+                value.append(np.concatenate(tmp_cell_sets[key]))
 
         meshobj.cell_sets = cell_sets
 
@@ -449,7 +464,7 @@ def translate_meshio(
             num_elements += cell_block.data.shape[0]
             febio_mesh.add_element_domain(elements_object)
     for name, members in meshobj.cell_sets_dict.items():
-        if any([exclude in name.lower() for exclude in EXCLUDE_SET_STR]):
+        if any(exclude in name.lower() for exclude in EXCLUDE_SET_STR):
             continue
         shell_set = name in shell_sets
         for member, offsets in members.items():
