@@ -350,7 +350,7 @@ VAR_SHAPE_LUT = {0: (-1, 1), 1: (-1, 3), 2: (-1, 6), 3: (-1, 3), 4: (-1, 21), 5:
 
 
 def check_file_is_febio(buffer):
-    if not np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] == int(FEBIO_TAG):
+    if np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] != int(FEBIO_TAG):
         dtypes_to_little_endian(_DTYPES)
         if np.frombuffer(buffer, dtype=_DTYPES["int32"], count=1)[0] == int(FEBIO_TAG):
             log.info("File is FEBio, but in Big ENDIAN format -- will be byte-swapped to Little _ENDIAN")
@@ -676,7 +676,7 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                     dset_path = f"/meshes/{mesh_cnt}/domains/{domain['name']}"
                     f.create_dataset(dset_path, data=domain["elements"], dtype=_DTYPES["int32"])
                     for key, value in domain.items():
-                        if not key == "elements":
+                        if key != "elements":
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_SURFACE_SECTION":
@@ -686,7 +686,7 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                     dset_path = f"/meshes/{mesh_cnt}/surfaces/{surface['name']}"
                     f.create_dataset(dset_path, data=surface["faces"], dtype=_DTYPES["int32"])
                     for key, value in surface.items():
-                        if not key == "surfaces":
+                        if key != "surfaces":
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_NODESET_SECTION":
@@ -698,7 +698,7 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                     dset_path = f"/meshes/{mesh_cnt}/nodesets/{nodeset['name']}"
                     f.create_dataset(dset_path, data=nodeset["nodes"], dtype=_DTYPES["int32"])
                     for key, value in nodeset.items():
-                        if not key == "nodes":
+                        if key != "nodes":
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_ELEMENTSET_SECTION":
@@ -707,7 +707,7 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                     dset_path = f"/meshes/{mesh_cnt}/elementsets/{elementset['name']}"
                     f.create_dataset(dset_path, data=elementset["elements"], dtype=_DTYPES["int32"])
                     for key, value in elementset.items():
-                        if not key == "elements":
+                        if key != "elements":
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_PARTS_SECTION":
@@ -751,7 +751,7 @@ def _parse_state_variable(buffer: bytes):
     state_dict = {"data": {}}
     while i < len(buffer) - 8:
         tag, offset = parse_prefix(buffer[i : i + 8])
-        state_dict[TAG_LUT[tag].pyname] = np.frombuffer(buffer[i + 8 : i + 8 + offset], dtype=_DTYPES[TAG_LUT[tag].format])
+        state_dict[TAG_LUT[tag].pyname] = np.frombuffer(buffer[i + 8 : i + 8 + offset], dtype=_DTYPES[TAG_LUT[tag].format])  # type:ignore
         i += 8 + offset
         tag, offset = parse_prefix(buffer[i : i + 8])
         child = buffer[i + 8 : i + 8 + offset]
