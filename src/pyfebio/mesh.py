@@ -180,7 +180,7 @@ class Elements(BaseXmlModel, tag="elements", validate_assignment=True):
 
 class PartList(BaseXmlModel, tag="PartList", validate_assignment=True):
     name: str = attr(default="allParts")
-    text: str = element(default="")
+    text: str = ""
 
     def add_part(self, new_part: str):
         self.text = f"{self.text},{new_part}"
@@ -259,13 +259,13 @@ class DiscreteSet(BaseXmlModel, tag="DiscreteSet", validate_assignment=True):
 class Mesh(BaseXmlModel, validate_assignment=True):
     nodes: list[Nodes] = element(default=[], tag="Nodes")
     elements: list[Elements] = element(default=[], tag="Elements")
+    part_lists: list[PartList] = element(default=[], tag="PartList")
     surfaces: list[Surface] = element(default=[], tag="Surface")
     edges: list[Edge] = element(default=[], tag="Edge")
     element_sets: list[ElementSet] = element(default=[], tag="ElementSet")
     node_sets: list[NodeSet] = element(default=[], tag="NodeSet")
     discrete_sets: list[DiscreteSet] = element(default=[], tag="DiscreteSet")
     surface_pairs: list[SurfacePair] = element(default=[], tag="SurfacePair")
-    part_lists: list[PartList] = element(default=[], tag="PartList")
 
     def add_node_domain(self, new_node_domain: Nodes):
         if not new_node_domain.name:
