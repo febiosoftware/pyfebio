@@ -225,7 +225,7 @@ us to fix the bottom nodes of the tibial cartilage, since we assume the tibia
 does not move.
 
 We make the femoral cartilage rigid, so we can move it in the z-direction. Due to
-this assumption and the lack of menisci this model overestimates the articular
+this assumption and the lack of menisci, this model overestimates the articular
 cartilage contact pressure.
 
 Note that we do not include geometry for the femur or tibia, as these are not necessary
@@ -251,7 +251,7 @@ Some important considerations:
 - Broyden's method is used because our stiffness matrix is non-symmetric
 - ls_check_jacobians=1 is defined in the Control section. This allows the line search
   to continue even if a negative Jacobian is encountered. Often a step size can be
-  found to overcome the negative Jacobian and the search.
+  found to overcome the negative Jacobian(s).
 
 Script
 ~~~~~~
@@ -276,8 +276,8 @@ Example Results
 OpenKnee Elastic
 ----------------
 
-TLDR
-~~~~
+TL;DR
+~~~~~
 
 Run the example with default settings:
 
@@ -332,8 +332,8 @@ Simulation Details:
 - Global Settings and Components:
 
   - Contact between the femoral and tibial cartilage is defined as SlidingElastic and enforced with the
-    Augmented Lagrangian method
-  - The Tibia is fixed in space
+    augmented Lagrangian method
+  - The tibia is fixed in space
   - The bottom nodes of the tibial cartilage shells are fixed in space.
   - The femoral cartilage is rigidly constrained to the femoral rigid body.
   - The ligaments are defined based on a LigamentConfig model. The default configuration
