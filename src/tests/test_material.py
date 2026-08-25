@@ -99,6 +99,8 @@ def test_perfect_osmometer(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
 def test_uncoupled_material(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for material_cls in get_args(feb.material.UncoupledMaterials):
         my_model = feb.model.Model(mesh_=hex8_febmesh)
+        my_model.control_.time_steps = 1
+        my_model.control_.step_size = 1.0
         for i, element in enumerate(my_model.mesh_.elements):
             my_mat = material_cls(name=element.name, id=i + 1)
             if hasattr(my_mat, "mat_axis"):

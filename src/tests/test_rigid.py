@@ -73,7 +73,6 @@ def test_rigid_spherical_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 20
     my_model.control_.step_size = 0.1
-    my_model.control_.time_stepper = None
     spherical_joint = feb.rigid.RigidSphericalJoint(
         name="spherical_a-b",
         body_a="bodyA",
@@ -96,7 +95,6 @@ def test_rigid_revolute_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
-    my_model.control_.time_stepper = None
     joint = feb.rigid.RigidRevoluteJoint(
         name="revolute_a-b",
         body_a="bodyA",
