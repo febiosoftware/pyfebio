@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -6,7 +7,7 @@ import pyfebio as feb
 
 
 @pytest.fixture(scope="module")
-def base_model(rigid_body_febmesh):
+def base_model(rigid_body_febmesh: feb.mesh.Mesh):
     my_model = feb.model.Model(mesh_=rigid_body_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.RigidBody(id=i + 1, name=element.name))
@@ -18,7 +19,7 @@ def base_model(rigid_body_febmesh):
     return my_model
 
 
-def test_hill_element(base_model, tmp_path):
+def test_hill_element(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 100
     my_model.control_.step_size = 0.02
@@ -58,13 +59,14 @@ def test_hill_element(base_model, tmp_path):
     assert result == 0, "HillElement.feb failed to run."
 
 
-def test_springs(base_model, tmp_path):
-    for spring_cls in (
-        feb.discrete.Spring,
-        feb.discrete.TensionOnlyLinearSpring,
-        feb.discrete.NonlinearSpring,
-        feb.discrete.ExperimentalSpring,
-    ):
+def test_springs(base_model: feb.model.Model, tmp_path: Path):
+    springs = (
+        feb.discrete.Spring(id=1, name="spring"),
+        feb.discrete.TensionOnlyLinearSpring(id=1, name="tension_only_linear_spring"),
+        feb.discrete.NonlinearSpring(id=1, name="nonlinear_spring", force=feb.discrete.NonlinearSpringForce(math="exp(x)")),
+        feb.discrete.ExperimentalSpring(id=4, name="experimental_spring"),
+    )
+    for spring in springs:
         my_model = deepcopy(base_model)
         my_model.control_.time_steps = 20
         my_model.control_.step_size = 0.1
@@ -75,13 +77,9 @@ def test_springs(base_model, tmp_path):
             feb.mesh.DiscreteElement(text="7,11"),
             feb.mesh.DiscreteElement(text="8,12"),
         ]
-        my_model.mesh_.add_discrete_set(feb.mesh.DiscreteSet(name="spring", elements=discrete_elements))
-        if spring_cls.__name__ == "NonlinearSpring":
-            spring = spring_cls(id=1, name="spring", measure="strain", force=feb.discrete.NonlinearSpringForce(math="exp(x)"))  # type: ignore
-        else:
-            spring = spring_cls(id=1, name="spring")  # type: ignore
+        my_model.mesh_.add_discrete_set(feb.mesh.DiscreteSet(name=spring.name, elements=discrete_elements))
         my_model.discrete_.add_discrete_material(spring)
-        my_model.discrete_.add_discrete_element(feb.discrete.DiscreteEntry(dmat=1, discrete_set="spring"))
+        my_model.discrete_.add_discrete_element(feb.discrete.DiscreteEntry(dmat=1, discrete_set=spring.name))
         my_model.rigid_.add_rigid_bc(
             feb.rigid.RigidPrescribed(rb="bodyB", type="rigid_displacement", dof="z", value=feb.rigid.Value(lc=1, text=1.0))
         )
@@ -96,7 +94,7 @@ def test_springs(base_model, tmp_path):
             ]
         )
         my_model.output_.add_plotfile(plot_file)
-        model_path = tmp_path / f"{spring_cls.__name__}.feb"
+        model_path = tmp_path / f"{spring.name}.feb"
         my_model.save(model_path)
         result = feb.model.run_model(model_path)
-        assert result == 0, f"{spring_cls.__name__}.feb failed to run."
+        assert result == 0, f"{spring.name}.feb failed to run."

@@ -1,6 +1,6 @@
 import itertools
 from io import StringIO
-from typing import Literal
+from typing import Literal, cast
 
 import meshio
 import numpy as np
@@ -141,6 +141,13 @@ ElementType = (
     | Line3Element
 )
 
+SolidElementType = (
+    Tet4Element | Tet10Element | Tet15Element | Hex8Element | Hex20Element | Hex27Element | Penta6Element | Penta15Element | Pyra5Element
+)
+ShellElementType = Tri3Element | Tri6Element | Quad4Element | Quad8Element | Quad9Element
+BeamElementType = Line2Element | Line3Element
+
+
 ELEMENT_CLASS_MAP: dict[str, type[ElementType]] = {
     "tet4": Tet4Element,
     "tet10": Tet10Element,
@@ -160,6 +167,15 @@ ELEMENT_CLASS_MAP: dict[str, type[ElementType]] = {
     "quad9": Quad9Element,
     "line2": Line2Element,
     "line3": Line3Element,
+}
+SHELL_ELEMENT_CLASS_MAP: dict[str, type[ShellElementType]] = {
+    "tri3": Tri3Element,
+    "tri6": Tri6Element,
+    "quad4": Quad4Element,
+    "q4ans": Quad4Element,
+    "q4eas": Quad4Element,
+    "quad8": Quad8Element,
+    "quad9": Quad9Element,
 }
 
 
@@ -199,7 +215,7 @@ class NodeSet(BaseXmlModel, tag="NodeSet", validate_assignment=True):
     text: StringUIntVec
 
     def add_node(self, new_node_id: int):
-        ",".join([self.text, str(new_node_id)])
+        self.text = f"{self.text},{new_node_id}"
 
 
 class Surface(BaseXmlModel, tag="Surface", validate_assignment=True):
@@ -333,7 +349,7 @@ ELEMENT_MAP: dict[str, SolidFEBioElementType | ShellFEBioElementType | BeamFEBio
     "quad": "quad4",
     "quad8": "quad8",
     "quad9": "quad9",
-    "line": "line2",
+    "line2": "line2",
     "line3": "line3",
 }
 
@@ -345,7 +361,7 @@ def _numpy_to_string_array(arr: np.ndarray, fmt: str) -> list[str]:
 
     buffer = StringIO()
     np.savetxt(buffer, arr, delimiter=",", fmt=fmt)
-    buffer.seek(0)
+    _ = buffer.seek(0)
     return buffer.read().splitlines()
 
 
@@ -375,10 +391,10 @@ def numpy_to_surface_list(
     facets: np.ndarray,
     element_type: ShellFEBioElementType,
     offset: int = 0,
-) -> list[ShellFEBioElementType]:
+) -> list[ShellElementType]:
     str_array = _numpy_to_string_array(facets, fmt="%d")
-    elem_class = ELEMENT_CLASS_MAP[element_type]
-    return [elem_class(id=i + offset + 1, text=line) for i, line in enumerate(str_array)]  # type:ignore
+    elem_class = SHELL_ELEMENT_CLASS_MAP[element_type]
+    return [elem_class(id=i + offset + 1, text=line) for i, line in enumerate(str_array)]
 
 
 EXCLUDE_SET_STR = ("gmsh:bounding_entities",)
@@ -398,21 +414,21 @@ def translate_meshio(
         shell_sets = []
     solid_nodes = []
     for key, value in meshobj.cells_dict.items():
-        if meshio._mesh.topological_dimension[key] == 3:
-            solid_nodes.extend(np.unique(value.ravel()).tolist())
-    solid_nodes = set(solid_nodes)
+        if meshio._mesh.topological_dimension[key] == 3:  # pyright: ignore[reportPrivateUsage]
+            solid_nodes.extend(np.unique(value.ravel()).tolist())  # pyright: ignore[reportUnknownArgumentType]
+    solid_nodes = set(solid_nodes)  # pyright: ignore[reportUnknownArgumentType]
 
     make_element = {}
     for key, values in meshobj.cells_dict.items():
         make_element[key] = []
-        if meshio._mesh.topological_dimension[key] == 2:
+        if meshio._mesh.topological_dimension[key] == 2:  # pyright: ignore[reportPrivateUsage]
             if not solid_nodes:
-                make_element[key].extend([False] * len(values))
+                make_element[key].extend([False] * len(values))  # pyright: ignore[reportUnknownArgumentType]
             else:
                 for element in values:
-                    make_element[key].append(bool(set(element.ravel()).difference(solid_nodes)))
+                    make_element[key].append(bool(set(element.ravel()).difference(solid_nodes)))  # pyright: ignore[reportUnknownArgumentType]
         else:
-            make_element[key].extend([True] * len(values))
+            make_element[key].extend([True] * len(values))  # pyright: ignore[reportUnknownArgumentType]
 
     febio_mesh = Mesh()
     if nodes_name is None:
@@ -421,69 +437,73 @@ def translate_meshio(
     febio_mesh.add_node_domain(nodes_object)
     num_elements = 0
     if not meshobj.cell_sets_dict:
-        cell_sets = set(itertools.chain(*meshobj.cell_tags.values()))  # type:ignore
+        cell_sets = set(itertools.chain(*meshobj.cell_tags.values()))  # pyright: ignore[reportUnknownArgumentType, reportAttributeAccessIssue]
         cell_sets = {set_name: [] for set_name in cell_sets}
         for cell_tags in meshobj.cell_data["cell_tags"]:
             unique_tags = np.unique(cell_tags)
             tmp_cell_sets = {set_name: [] for set_name in cell_sets}
-            for tag, set_names in meshobj.cell_tags.items():  # type: ignore
+            for tag, set_names in meshobj.cell_tags.items():  # pyright: ignore[reportAttributeAccessIssue]
                 if tag in unique_tags:
                     for set_name in set_names:
-                        tmp_cell_sets[set_name].append(np.argwhere(cell_tags == tag).ravel())
+                        tmp_cell_sets[set_name].append(np.argwhere(cell_tags == tag).ravel())  # pyright: ignore[reportUnknownArgumentType]
                 else:
                     for set_name in set_names:
                         tmp_cell_sets[set_name].append(np.array([]))
             for key, value in cell_sets.items():
-                value.append(np.concatenate(tmp_cell_sets[key]))
+                value.append(np.concatenate(tmp_cell_sets[key]))  # pyright: ignore[reportUnknownArgumentType]
 
         meshobj.cell_sets = cell_sets
 
     if hasattr(meshobj, "point_tags"):
         node_sets = {}
-        for tag, set_names in meshobj.point_tags.items():  # type: ignore
-            node_sets.setdefault(set_names[0], [])
-            node_ids = list(np.argwhere(meshobj.point_data["point_tags"] == tag).ravel() + 1 + nodeoffset)
+        for tag, set_names in meshobj.point_tags.items():  # pyright: ignore[reportAttributeAccessIssue]
+            node_sets.setdefault(set_names[0], [])  # pyright: ignore[reportUnknownArgumentType]
+            node_ids = list(np.argwhere(meshobj.point_data["point_tags"] == tag).ravel() + 1 + nodeoffset)  # pyright: ignore[reportUnknownArgumentType]
             node_sets[set_names[0]].extend(node_ids)
         for set_name, members in node_sets.items():
-            node_set = NodeSet(name=set_name, text=",".join(map(str, members)))
+            node_set = NodeSet(name=set_name, text=",".join(map(str, members)))  # pyright: ignore[reportUnknownArgumentType]
             febio_mesh.add_node_set(node_set)
 
     # hex27 are ordered incorrectly
     hex27_reorder = [2, 6, 7, 3, 1, 5, 4, 0, 18, 14, 19, 10, 17, 12, 16, 8, 9, 13, 15, 11]
     hex27_reorder.extend([21, 25, 20, 24, 23, 22, 26])
     if not solid_nodes and not shell_sets:
-        for block_id, cell_block in enumerate(meshobj.cells):
+        for block_id, cell_block in enumerate(meshobj.cells):  # pyright: ignore[reportUnknownArgumentType]
             if elements_name is None:
                 part_name = f"{cell_block.type}_{block_id + 1}"
             else:
                 part_name = elements_name
             etype = ELEMENT_MAP[cell_block.type]
             elements_object = numpy_to_elements(
-                elements=cell_block.data + 1 + nodeoffset, element_type=etype, name=part_name, offset=num_elements + elementoffset
+                elements=cell_block.data + 1 + nodeoffset,  # pyright: ignore[reportUnknownArgumentType]
+                element_type=etype,
+                name=part_name,
+                offset=num_elements + elementoffset,  # pyright: ignore[reportUnknownArgumentType]
             )
             num_elements += cell_block.data.shape[0]
             febio_mesh.add_element_domain(elements_object)
     for name, members in meshobj.cell_sets_dict.items():
+        name = cast(str, name)
         if any(exclude in name.lower() for exclude in EXCLUDE_SET_STR):
             continue
         shell_set = name in shell_sets
         for member, offsets in members.items():
-            if len(members.keys()) > 1:
+            if len(members.keys()) > 1:  # pyright: ignore[reportUnknownArgumentType]
                 set_name = f"{name}_{ELEMENT_MAP[member]}"
             else:
                 set_name = name
             etype = ELEMENT_MAP[member]
-            if shell_set or np.array(make_element[member])[offsets].all():
+            if shell_set or np.array(make_element[member])[offsets].all():  # pyright: ignore[reportUnknownArgumentType]
                 if etype == "hex27":
                     elements = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
                     elements = elements[:, hex27_reorder]
                 else:
                     elements = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
                 elements_object = numpy_to_elements(
-                    elements=elements,
+                    elements=elements,  # pyright: ignore[reportUnknownArgumentType]
                     element_type=etype,
                     name=set_name,
-                    offset=num_elements + elementoffset,
+                    offset=num_elements + elementoffset,  # pyright: ignore[reportUnknownArgumentType]
                 )
                 num_elements += meshobj.cells_dict[member][offsets].shape[0]
                 febio_mesh.add_element_domain(elements_object)
@@ -496,12 +516,13 @@ def translate_meshio(
                     "quad8": surface_object.all_quad8,
                     "quad9": surface_object.all_quad9,
                 }
-                etype = ELEMENT_MAP[member]
+                etype = cast(ShellFEBioElementType, ELEMENT_MAP[member])
+
                 facets = meshobj.cells_dict[member][offsets] + 1 + nodeoffset
-                surface_list = numpy_to_surface_list(facets=facets, element_type=etype, offset=surfaceoffset)  # type:ignore
-                fn_map[etype].extend(surface_list)
+                surface_list = numpy_to_surface_list(facets=facets, element_type=etype, offset=surfaceoffset)  # pyright: ignore[reportUnknownArgumentType]
+                fn_map[etype].extend(surface_list)  # pyright: ignore[reportArgumentType]
                 if node_sets_from_surfaces:
-                    node_set = ",".join(map(str, sorted(np.unique(facets.ravel()))))
+                    node_set = ",".join(map(str, sorted(np.unique(facets.ravel()))))  # pyright: ignore[reportUnknownArgumentType]
                     febio_mesh.add_node_set(NodeSet(name=set_name, text=node_set))
                 febio_mesh.add_surface(surface_object)
     return febio_mesh

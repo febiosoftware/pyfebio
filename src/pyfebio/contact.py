@@ -114,6 +114,8 @@ class TiedElastic(TiedBase):
     search_radius: float = element(default=1)
     gaptol: float = element(default=-1)
     symmetric_stiffness: Literal[0, 1] = element(default=1)
+    flip_primary: Literal[0, 1] = element(default=0)
+    flip_secondary: Literal[0, 1] = element(default=0)
 
 
 class TiedFacetOnFacet(TiedBase):

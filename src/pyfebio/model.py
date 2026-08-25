@@ -57,15 +57,16 @@ class FEBioRoot(BaseXmlModel, tag="febio_spec", validate_assignment=True):
         assert isinstance(section, SectionTypes), "section must be a SectionTypes"
         self.sections.append(section)
 
-    def save(self, filename: str):
+    def save(self, filename: str | Path):
         xml = self.to_xml(
             pretty_print=True,
             encoding="ISO-8859-1",
             xml_declaration=True,
             skip_empty=True,
         )
+        assert isinstance(xml, bytes)
         with open(filename, "wb") as fid:
-            fid.write(xml)  # type: ignore
+            _ = fid.write(xml)
 
 
 class Model(BaseXmlModel, tag="febio_spec", validate_assignment=True, extra="forbid"):
@@ -89,7 +90,7 @@ class Model(BaseXmlModel, tag="febio_spec", validate_assignment=True, extra="for
     step_: step.Step = element(default=step.Step(), tag="Step")
     output_: output.Output = element(default=output.Output(), tag="Output")
 
-    def save(self, filename: str):
+    def save(self, filename: str | Path):
         xml = self.to_xml(
             pretty_print=True,
             encoding="ISO-8859-1",
@@ -98,7 +99,7 @@ class Model(BaseXmlModel, tag="febio_spec", validate_assignment=True, extra="for
         )
         assert isinstance(xml, bytes)
         with open(filename, "wb") as fid:
-            fid.write(xml)
+            _ = fid.write(xml)
 
     def add_simple_rigid_body(self, origin: tuple[float, float, float], name: str):
         element_id = self.mesh_.elements[-1].all_elements[-1].id + 1
@@ -131,7 +132,7 @@ class BiphasicModel(Model):
     control_: control.Control | None = element(
         default=control.Control(
             analysis="TRANSIENT",
-            solver=control.Solver(type="biphasic", ptol=0.01),
+            solver=control.BiphasicSolver(),
             time_steps=100,
             step_size=0.1,
             time_stepper=control.TimeStepper(dtmax=control.TimeStepValue(text=0.1)),
@@ -144,7 +145,7 @@ class MultiphasicModel(Model):
     control_: control.Control | None = element(
         default=control.Control(
             analysis="TRANSIENT",
-            solver=control.Solver(type="multiphasic", ptol=0.01, ctol=0.01, force_positive_concentrations=1),
+            solver=control.MultiphasicSolver(),
             time_steps=100,
             step_size=0.1,
             time_stepper=control.TimeStepper(dtmax=control.TimeStepValue(text=0.1)),

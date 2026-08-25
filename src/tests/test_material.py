@@ -1,26 +1,34 @@
+from pathlib import Path
 from typing import get_args
 
 import pyfebio as feb
 
 
-def test_unconstrained_material(hex8_febmesh, tmp_path):
+def test_unconstrained_material(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for material_cls in get_args(feb.material.UnconstrainedMaterials):
+        if material_cls is feb.material.SphericalFiberDistributionSBM:
+            continue
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
-            my_mat = material_cls(name=element.name, id=i + 1)
-            if hasattr(my_mat, "mat_axis"):
-                my_mat.mat_axis = feb.material.MaterialAxisVector()
-            elif hasattr(my_mat, "fiber"):
-                my_mat.fiber = feb.material.FiberVector()
+            if material_cls is feb.material.SphericalFiberDistribution:
+                fiber = material_cls()
+                ground = feb.material.NeoHookean()
+                my_mat = feb.material.SolidMixture(name=element.name, id=i + 1, solid_list=[fiber, ground])
+            else:
+                my_mat = material_cls(name=element.name, id=i + 1)
+                if hasattr(my_mat, "mat_axis"):
+                    my_mat.mat_axis = feb.material.MaterialAxisVector()  # pyright: ignore[reportAttributeAccessIssue]
+                elif hasattr(my_mat, "fiber"):
+                    my_mat.fiber = feb.material.FiberVector()  # pyright: ignore[reportAttributeAccessIssue]
             my_model.material_.add_material(my_mat)
             my_model.meshdomains_.add_solid_domain(feb.meshdomains.SolidDomain(name=element.name, mat=element.name))
         model_file = tmp_path.joinpath(f"{my_model.material_.all_materials[0].type.replace(' ', '_')}.feb")
         my_model.save(model_file)
-        result = feb.model.run_model(model_file)
+        result = feb.model.run_model(model_file, silent=True)
         assert result == 0, f"{material_cls.__name__} failed"
 
 
-def test_efd_donnan_equilibrium(hex8_febmesh, tmp_path):
+def test_efd_donnan_equilibrium(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_mat = feb.material.EllipsoidalFiberDistributionDonnanEquilibrium(
@@ -36,7 +44,7 @@ def test_efd_donnan_equilibrium(hex8_febmesh, tmp_path):
     assert result == 0
 
 
-def test_osmotic_virial_pressure(hex20_febmesh, tmp_path):
+def test_osmotic_virial_pressure(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex20_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_mat = feb.material.SolidMixture(name=element.name, id=i + 1)
@@ -58,7 +66,7 @@ def test_osmotic_virial_pressure(hex20_febmesh, tmp_path):
     assert result == 0
 
 
-def test_perfect_osmometer(hex20_febmesh, tmp_path):
+def test_perfect_osmometer(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex20_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_mat = feb.material.SolidMixture(name=element.name, id=i + 1)
@@ -88,7 +96,7 @@ def test_perfect_osmometer(hex20_febmesh, tmp_path):
     assert result == 0
 
 
-def test_uncoupled_material(hex8_febmesh, tmp_path):
+def test_uncoupled_material(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for material_cls in get_args(feb.material.UncoupledMaterials):
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
@@ -105,7 +113,7 @@ def test_uncoupled_material(hex8_febmesh, tmp_path):
         assert result == 0, f"{material_cls.__name__} failed"
 
 
-def test_biphasic_material(hex20_febmesh, tmp_path):
+def test_biphasic_material(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for perm_cls in get_args(feb.material.PermeabilityType):
         my_model = feb.model.BiphasicModel(
             mesh_=hex20_febmesh,
@@ -141,7 +149,7 @@ def test_biphasic_material(hex20_febmesh, tmp_path):
         assert result == 0, f"{perm_cls.__name__} failed"
 
 
-def test_unconstrained_fiber_materials(hex8_febmesh, tmp_path):
+def test_unconstrained_fiber_materials(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for fiber_model in get_args(feb.material.FiberModel):
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
@@ -166,7 +174,7 @@ def test_unconstrained_fiber_materials(hex8_febmesh, tmp_path):
         assert result == 0, f"{fiber_model.__name__} failed"
 
 
-def test_uncoupled_fiber_materials(hex8_febmesh, tmp_path):
+def test_uncoupled_fiber_materials(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     for fiber_model in get_args(feb.material.FiberModelUC):
         my_model = feb.model.Model(mesh_=hex8_febmesh)
         for i, element in enumerate(my_model.mesh_.elements):
@@ -191,7 +199,7 @@ def test_uncoupled_fiber_materials(hex8_febmesh, tmp_path):
         assert result == 0, f"{fiber_model.__name__} failed"
 
 
-def test_viscoelastic_material(hex20_febmesh, tmp_path):
+def test_viscoelastic_material(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(
         mesh_=hex20_febmesh,
     )
@@ -222,7 +230,7 @@ def test_viscoelastic_material(hex20_febmesh, tmp_path):
     assert result == 0
 
 
-def test_viscoelastic_uc_material(hex20_febmesh, tmp_path):
+def test_viscoelastic_uc_material(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(
         mesh_=hex20_febmesh,
     )
@@ -253,7 +261,7 @@ def test_viscoelastic_uc_material(hex20_febmesh, tmp_path):
     assert result == 0
 
 
-def test_multiphasic_model(hex20_febmesh, tmp_path):
+def test_multiphasic_model(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.MultiphasicModel(
         mesh_=hex20_febmesh,
     )

@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic_xml import BaseXmlModel, attr, element
 
@@ -31,7 +31,7 @@ class ConstraintInSituStretch(BaseXmlModel, validate_assignment=True):
     isochoric: Literal[0, 1] = element(default=1)
 
 
-ConstraintTypes = Union[ConstraintSymmetryPlane, ConstraintInSituStretch, ConstraintPrestrain]
+ConstraintTypes = ConstraintSymmetryPlane | ConstraintInSituStretch | ConstraintPrestrain
 
 
 class Constraints(BaseXmlModel, tag="Constraints", validate_assignment=True):

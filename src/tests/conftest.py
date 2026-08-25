@@ -38,27 +38,27 @@ def hex27_meshio() -> meshio.Mesh:
 
 
 @pytest.fixture(scope="session")
-def tet4_febmesh(tet4_meshio) -> mesh.Mesh:
+def tet4_febmesh(tet4_meshio: meshio.Mesh) -> mesh.Mesh:
     return mesh.translate_meshio(tet4_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
-def tet10_febmesh(tet10_meshio) -> mesh.Mesh:
+def tet10_febmesh(tet10_meshio: meshio.Mesh) -> mesh.Mesh:
     return mesh.translate_meshio(tet10_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
-def hex8_febmesh(hex8_meshio) -> mesh.Mesh:
+def hex8_febmesh(hex8_meshio: meshio.Mesh) -> mesh.Mesh:
     return mesh.translate_meshio(hex8_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
-def hex20_febmesh(hex20_meshio) -> mesh.Mesh:
+def hex20_febmesh(hex20_meshio: meshio.Mesh) -> mesh.Mesh:
     return mesh.translate_meshio(hex20_meshio, node_sets_from_surfaces=True)
 
 
 @pytest.fixture(scope="session")
-def hex27_febmesh(hex27_meshio) -> mesh.Mesh:
+def hex27_febmesh(hex27_meshio: meshio.Mesh) -> mesh.Mesh:
     return mesh.translate_meshio(hex27_meshio, node_sets_from_surfaces=True)
 
 
@@ -76,7 +76,7 @@ def tet10_contact_febmesh() -> mesh.Mesh:
 
 @pytest.fixture(scope="session")
 def hex8_contact_febmesh() -> mesh.Mesh:
-    mesh_obj = meshio.read(GMSH_DIR.joinpath("hex8_contact.msh"), file_format="gmsh")
+    mesh_obj = meshio.gmsh.read(GMSH_DIR.joinpath("hex8_contact.msh"))
     return mesh.translate_meshio(mesh_obj, node_sets_from_surfaces=True)
 
 
@@ -113,7 +113,7 @@ def penta6_febmesh() -> mesh.Mesh:
     elements = [mesh.Penta6Element(id=i + 1, text=",".join(map(str, elem))) for i, elem in enumerate(elements)]
     mesh_obj = mesh.Mesh(
         nodes=[mesh.Nodes(all_nodes=nodes)],
-        elements=[mesh.Elements(name="penta_mesh", type="penta6", all_elements=elements)],  # type:ignore
+        elements=[mesh.Elements(name="penta_mesh", type="penta6", all_elements=elements)],  # pyright:ignore[reportArgumentType]
     )
     mesh_obj.node_sets = [
         mesh.NodeSet(name="bottom", text="1,2,3,4,5,6,7,15"),
