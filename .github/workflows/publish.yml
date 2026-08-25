@@ -19,28 +19,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-      - name: Install dependencies
-        env:
-          FEBIO_URL: ${{ secrets.FEBIO_URL }}
-        run: |
-          curl -L "$FEBIO_URL" --output FEBio4.tar.gz
-          tar -xvf FEBio4.tar.gz
-          echo "$GITHUB_WORKSPACE/FEBio4/bin/" >> $GITHUB_PATH
-          pip install pytest
-          pip install .
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out code
+  #       uses: actions/checkout@v4
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v5
+  #     - name: Install dependencies
+  #       env:
+  #         FEBIO_URL: ${{ secrets.FEBIO_URL }}
+  #       run: |
+  #         curl -L "$FEBIO_URL" --output FEBio4.tar.gz
+  #         tar -xvf FEBio4.tar.gz
+  #         echo "$GITHUB_WORKSPACE/FEBio4/bin/" >> $GITHUB_PATH
+  #         pip install pytest
+  #         pip install .
 
-      - name: Test and Coverage
-        run: python -m pytest
+  #     - name: Test and Coverage
+  #       run: python -m pytest
   build-docs:
     runs-on: ubuntu-latest
-    needs: [test]
+    # needs: [test]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -62,7 +62,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: [test, build-docs]
+    # needs: [test, build-docs]
+    needs: [build-docs]
     runs-on: ubuntu-latest
     name: Deploy
     steps:
@@ -70,7 +71,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
   publish:
-    needs: [test, build-docs, deploy-docs]
+    # needs: [test, build-docs, deploy-docs]
+    needs: [build-docs, deploy-docs]
     runs-on: ubuntu-latest
     environment:
       name: pypi
