@@ -1,6 +1,6 @@
 [project]
 name = "pyfebio"
-version = "0.2.1"
+version = "0.3.0"
 description = "A Python API for the FEBio finite element solver."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,5 +28,14 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.8.13,<0.9.0"]
 build-backend = "uv_build"
+
 [tool.ruff.lint]
 ignore = ["UP018", "RUF046"]
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+reportMissingTypeStubs = false
+reportOptionalMemberAccess = false
+reportUnknownMemberType = false
+reportUnknownVariableType = false
+reportAny = false

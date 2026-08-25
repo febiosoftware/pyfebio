@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pyfebio as feb
 
 
@@ -6,7 +8,7 @@ def test_instantiate_model():
     assert isinstance(my_model, feb.model.Model)
 
 
-def test_tet4_model(tet4_febmesh, tmp_path):
+def test_tet4_model(tet4_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=tet4_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -25,7 +27,7 @@ def test_tet4_model(tet4_febmesh, tmp_path):
     assert result == 0
 
 
-def test_tet10_model(tet10_febmesh, tmp_path):
+def test_tet10_model(tet10_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=tet10_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -45,7 +47,7 @@ def test_tet10_model(tet10_febmesh, tmp_path):
     assert result == 0
 
 
-def test_tet15_model(tet15_febmesh, tmp_path):
+def test_tet15_model(tet15_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=tet15_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -60,7 +62,7 @@ def test_tet15_model(tet15_febmesh, tmp_path):
     assert result == 0
 
 
-def test_hex8_model(hex8_febmesh, tmp_path):
+def test_hex8_model(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -80,7 +82,7 @@ def test_hex8_model(hex8_febmesh, tmp_path):
     assert result == 0
 
 
-def test_hex20_model(hex20_febmesh, tmp_path):
+def test_hex20_model(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex20_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -100,7 +102,7 @@ def test_hex20_model(hex20_febmesh, tmp_path):
     assert result == 0
 
 
-def test_hex27_model(hex27_febmesh, tmp_path):
+def test_hex27_model(hex27_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex27_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -120,7 +122,7 @@ def test_hex27_model(hex27_febmesh, tmp_path):
     assert result == 0
 
 
-def test_penta6_model(penta6_febmesh, tmp_path):
+def test_penta6_model(penta6_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=penta6_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -134,7 +136,7 @@ def test_penta6_model(penta6_febmesh, tmp_path):
     assert result == 0
 
 
-def test_pyra5_model(pyra5_febmesh, tmp_path):
+def test_pyra5_model(pyra5_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=pyra5_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -149,7 +151,7 @@ def test_pyra5_model(pyra5_febmesh, tmp_path):
     assert result == 0
 
 
-def test_tri3_model(shell_tri3, tmp_path):
+def test_tri3_model(shell_tri3: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=shell_tri3)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -168,7 +170,7 @@ def test_tri3_model(shell_tri3, tmp_path):
     assert result == 0, "Tri3 shell model failed"
 
 
-def test_tri6_model(shell_tri6, tmp_path):
+def test_tri6_model(shell_tri6: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=shell_tri6)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -187,7 +189,7 @@ def test_tri6_model(shell_tri6, tmp_path):
     assert result == 0, "Tri6 shell model failed"
 
 
-def test_quad4_model(shell_quad4, tmp_path):
+def test_quad4_model(shell_quad4: feb.mesh.Mesh, tmp_path: Path):
     for etype, displacement in zip(("quad4", "q4ans", "q4eas"), (0.2, 0.01, 0.2)):
         my_model = feb.model.Model(mesh_=shell_quad4)
         for i, element in enumerate(my_model.mesh_.elements):
@@ -210,7 +212,7 @@ def test_quad4_model(shell_quad4, tmp_path):
         assert result == 0, f"{etype} shell model failed"
 
 
-def test_quad8_model(shell_quad8, tmp_path):
+def test_quad8_model(shell_quad8: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=shell_quad8)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -229,7 +231,7 @@ def test_quad8_model(shell_quad8, tmp_path):
     assert result == 0, "Quad8 shell model failed"
 
 
-def test_beam2_model(beam2_febmesh, tmp_path):
+def test_beam2_model(beam2_febmesh: feb.mesh.Mesh, tmp_path: Path):
     # TODO: we can only test the elastic-truss version which behaves like the linear-truss but can use
     # FEBio materials
     my_model = feb.model.Model(mesh_=beam2_febmesh)
@@ -247,7 +249,7 @@ def test_beam2_model(beam2_febmesh, tmp_path):
     assert result == 0
 
 
-def test_beam3_model(beam3_febmesh, tmp_path):
+def test_beam3_model(beam3_febmesh: feb.mesh.Mesh, tmp_path: Path):
     # TODO: we can only test the elastic-truss version which behaves like the linear-truss but can use
     # FEBio materials
     # I'm not sure what materials are assigned to the other types. Likewise, there is no quadratic beam domain
@@ -265,7 +267,7 @@ def test_beam3_model(beam3_febmesh, tmp_path):
     assert result == 0
 
 
-def test_rigid_fixed_bc(hex20_contact_febmesh, tmp_path):
+def test_rigid_fixed_bc(hex20_contact_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex20_contact_febmesh)
     rigid_material = feb.material.RigidBody(name="bodyA", id=1)
     deformable_material = feb.material.NeoHookean(name="deformableBody", id=2)
@@ -286,7 +288,7 @@ def test_rigid_fixed_bc(hex20_contact_febmesh, tmp_path):
     assert result == 0
 
 
-def test_prescribed_deformation_gradient_bc(hex8_febmesh, tmp_path):
+def test_prescribed_deformation_gradient_bc(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     my_model.mesh_.add_node_set(
         feb.mesh.NodeSet(name="all", text=",".join([str(i + 1) for i, _ in enumerate(hex8_febmesh.nodes[0].all_nodes)]))
@@ -315,7 +317,7 @@ def test_prescribed_deformation_gradient_bc(hex8_febmesh, tmp_path):
     assert result == 0, "PrescribedDeformationGradient.feb failed to run."
 
 
-def test_displacement_along_normals(hex8_febmesh, tmp_path):
+def test_displacement_along_normals(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))
@@ -336,7 +338,7 @@ def test_displacement_along_normals(hex8_febmesh, tmp_path):
     assert result == 0, "DisplacementAlongNormals.feb failed to run."
 
 
-def test_prescribed_fluid_pressure(hex20_febmesh, tmp_path):
+def test_prescribed_fluid_pressure(hex20_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.BiphasicModel(mesh_=hex20_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.BiphasicMaterial(name=element.name, id=i + 1, solid=feb.material.NeoHookean()))
@@ -360,7 +362,7 @@ def test_prescribed_fluid_pressure(hex20_febmesh, tmp_path):
     assert result == 0, "PrescribedFluidPressure.feb failed to run."
 
 
-def test_multistep_model(hex8_febmesh, tmp_path):
+def test_multistep_model(hex8_febmesh: feb.mesh.Mesh, tmp_path: Path):
     my_model = feb.model.Model(mesh_=hex8_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.NeoHookean(name=element.name, id=i + 1))

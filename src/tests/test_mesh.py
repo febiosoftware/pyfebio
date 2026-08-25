@@ -1,4 +1,5 @@
 import pytest
+from meshio import Mesh
 from pydantic import ValidationError
 
 import pyfebio as feb
@@ -24,9 +25,9 @@ QUAD4_ELEMENT_STRINGS = ("1,2,3,4",)
 
 
 def test_node_definition():
-    feb.mesh.Node(id=1, text=NODE_STRINGS[0])
+    _ = feb.mesh.Node(id=1, text=NODE_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Node(id=1, text=("1.,2.,3.,4."))
+        _ = feb.mesh.Node(id=1, text=("1.,2.,3.,4."))
 
 
 def test_bad_node_append():
@@ -42,60 +43,60 @@ def test_nodes_definition():
 
 
 def test_tet4_element_definition():
-    feb.mesh.Tet4Element(id=1, text=TET4_ELEMENT_STRINGS[0])
+    _ = feb.mesh.Tet4Element(id=1, text=TET4_ELEMENT_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Tet4Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
+        _ = feb.mesh.Tet4Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
 
 
 def test_penta6_element_definition():
-    feb.mesh.Penta6Element(id=1, text=PENTA6_ELEMENT_STRINGS[0])
+    _ = feb.mesh.Penta6Element(id=1, text=PENTA6_ELEMENT_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Penta6Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
+        _ = feb.mesh.Penta6Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
 
 
 def test_hex8_element_definition():
-    feb.mesh.Hex8Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
+    _ = feb.mesh.Hex8Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Hex8Element(id=1, text=TET4_ELEMENT_STRINGS[0])
+        _ = feb.mesh.Hex8Element(id=1, text=TET4_ELEMENT_STRINGS[0])
 
 
 def test_tri3_element_definition():
-    feb.mesh.Tri3Element(id=1, text=TRI3_ELEMENT_STRINGS[0])
+    _ = feb.mesh.Tri3Element(id=1, text=TRI3_ELEMENT_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Tri3Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
+        _ = feb.mesh.Tri3Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
 
 
 def test_quad4_element_definition():
-    feb.mesh.Quad4Element(id=1, text=QUAD4_ELEMENT_STRINGS[0])
+    _ = feb.mesh.Quad4Element(id=1, text=QUAD4_ELEMENT_STRINGS[0])
     with pytest.raises(ValidationError):
-        feb.mesh.Quad4Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
+        _ = feb.mesh.Quad4Element(id=1, text=HEX8_ELEMENT_STRINGS[0])
 
 
-def test_translate_tet4_mesh(tet4_meshio):
+def test_translate_tet4_mesh(tet4_meshio: Mesh):
     mesh = feb.mesh.translate_meshio(tet4_meshio)
     assert mesh.nodes
     assert mesh.elements
 
 
-def test_translate_tet10_mesh(tet10_meshio):
+def test_translate_tet10_mesh(tet10_meshio: Mesh):
     mesh = feb.mesh.translate_meshio(tet10_meshio)
     assert mesh.nodes
     assert mesh.elements
 
 
-def test_translate_hex8_mesh(hex8_meshio):
+def test_translate_hex8_mesh(hex8_meshio: Mesh):
     mesh = feb.mesh.translate_meshio(hex8_meshio)
     assert mesh.nodes
     assert mesh.elements
 
 
-def test_translate_hex20_mesh(hex20_meshio):
+def test_translate_hex20_mesh(hex20_meshio: Mesh):
     mesh = feb.mesh.translate_meshio(hex20_meshio)
     assert mesh.nodes
     assert mesh.elements
 
 
-def test_translate_hex27_mesh(hex27_meshio):
+def test_translate_hex27_mesh(hex27_meshio: Mesh):
     mesh = feb.mesh.translate_meshio(hex27_meshio)
     assert mesh.nodes
     assert mesh.elements

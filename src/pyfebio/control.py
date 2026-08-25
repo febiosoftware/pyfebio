@@ -23,15 +23,39 @@ class LinearSolver(BaseXmlModel, validate_assignment=True):
     type: Literal["pardiso", "mkl_dss"] = attr(default="pardiso")
 
 
-class QuasiNewtonMethod(BaseXmlModel, validate_assignment=True):
-    type: Literal["BFGS", "Broyden", "Full Newton", "JFNK", "Modified Newton"] = attr(default="BFGS")
+class BFGSMethod(BaseXmlModel, validate_assignment=True):
+    type: Literal["BFGS"] = attr(default="BFGS", frozen=True)
     max_ups: int = element(default=10, ge=0)
     max_buffer_size: int = element(default=0, ge=0)
     cycle_buffer: Literal[0, 1] = element(default=1)
     cmax: float = element(default=1.0e5)
 
 
-class Solver(BaseXmlModel, validate_assignment=True, skip_empty=True):
+class BroydenMethod(BaseXmlModel, validate_assignment=True):
+    type: Literal["Broyden"] = attr(default="Broyden", frozen=True)
+    max_ups: int = element(default=10, ge=0)
+    max_buffer_size: int = element(default=0, ge=0)
+    cycle_buffer: Literal[0, 1] = element(default=1)
+    cmax: float = element(default=1.0e5)
+
+
+class JFNKMethod(BaseXmlModel, validate_assignment=True):
+    type: Literal["JFNK"] = attr(default="JFNK", frozen=True)
+    jfnk_eps: float = element(default=1.0e-6, ge=0)
+
+
+class FullNewtonMethod(BaseXmlModel, validate_assignment=True):
+    type: Literal["full Newton"] = attr(default="full Newton", frozen=True)
+
+
+class ModifiedNewtonMethod(BaseXmlModel, validate_assignment=True):
+    type: Literal["modified Newton"] = attr(default="modified Newton", frozen=True)
+
+
+QuasiNewtonMethod = BFGSMethod | BroydenMethod | JFNKMethod | FullNewtonMethod | ModifiedNewtonMethod
+
+
+class _BaseSolver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     """
     Class for Non-Linear Solver settings. Currently, only supporting
     "solid" and "biphasic" analyses, and direct linear solvers "pardiso"
@@ -40,31 +64,101 @@ class Solver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     More nuanced parameters can be added as needed.
     """
 
-    type: Literal["solid", "biphasic", "multiphasic"] = attr(default="solid")
-    dtol: float = element(default=0.001, gt=0)
-    etol: float = element(default=0.01, ge=0)
-    rtol: float = element(default=0, ge=0)
-    ptol: float | None = element(default=None)
-    ctol: float | None = element(default=None)
-    lstol: float = element(default=0.9, ge=0)
-    lsmin: float = element(default=0.01, gt=0)
-    lsiter: int = element(default=5, ge=0)
-    max_refs: int = element(default=15, ge=0)
-    diverge_reform: Literal[0, 1] = element(default=1)
-    min_residual: float = element(default=1e-20, gt=0.0)
-    force_positive_concentrations: Literal[0, 1] | None = element(default=None)
-    qn_method: QuasiNewtonMethod = element(default=QuasiNewtonMethod())
-    symmetric_stiffness: Literal["symmetric", "non-symmetric", "symmetric-structure"] = element(default="non-symmetric")
+    symmetric_stiffness: Literal["symmetric", "non-symmetric", "symmetric-structure", "preferred"] = element(default="preferred")
     equation_scheme: Literal["staggered", "block"] = element(default="staggered")
     equation_order: Literal["default", "reverse", "febio2"] = element(default="default")
     optimize_bw: Literal[0, 1] = element(default=0)
+    lstol: float = element(default=0.9, ge=0)
+    lsmin: float = element(default=0.01, gt=0)
+    lsiter: int = element(default=5, ge=0)
+    ls_check_jacobians: Literal[0, 1] = element(default=0)
+    max_refs: int = element(default=15, ge=0)
+    check_zero_diagonal: Literal[0, 1] = element(default=0)
+    zero_diagonal_tol: Literal[0] | float = element(default=0, ge=0)
+    force_partition: Literal[0, 1] = element(default=0)
+    reform_each_time_step: Literal[0, 1] = element(default=1)
+    reform_augment: Literal[0, 1] = element(default=0)
+    diverge_reform: Literal[0, 1] = element(default=1)
+    min_residual: float = element(default=1e-20, gt=0.0)
+    max_residual: Literal[0] | float = element(default=0, ge=0)
+    qn_method: QuasiNewtonMethod = element(default=BFGSMethod())
     linear_solver: LinearSolver = element(default=LinearSolver())
+
+
+class SolidSolver(_BaseSolver, validate_assignment=True, skip_empty=True):
+    type: Literal["solid"] = attr(default="solid", frozen=True)
+    dtol: float = element(default=0.001, gt=0)
+    etol: float = element(default=0.01, ge=0)
+    rtol: float = element(default=0, ge=0)
+    rhoi: float = element(default=-2)
+    alpha: float = element(default=1)
+    beta: float = element(default=0.25)
+    gamma: float = element(default=0.5)
+    logSolve: Literal[0, 1] = element(default=0)
+    arc_length: int = element(default=0)
+    arc_length_scale: float = element(default=0)
+
+
+class BiphasicSolver(_BaseSolver, validate_assignment=True, skip_empty=True):
+    type: Literal["biphasic"] = attr(default="biphasic", frozen=True)
+    dtol: float = element(default=0.001, gt=0)
+    etol: float = element(default=0.01, ge=0)
+    rtol: float = element(default=0, ge=0)
+    ptol: float = element(default=0.01, ge=0)
+    ctol: float = element(default=0, ge=0)
+    mixed_formulation: Literal[0, 1] = element(default=0)
+
+
+class MultiphasicSolver(_BaseSolver, validate_assignment=True, skip_empty=True):
+    type: Literal["multiphasic"] = attr(default="multiphasic", frozen=True)
+    dtol: float = element(default=0.001, gt=0)
+    etol: float = element(default=0.01, ge=0)
+    rtol: float = element(default=0, ge=0)
+    ptol: float = element(default=0.01, ge=0)
+    ctol: float = element(default=0.01, ge=0)
+    force_positive_concentrations: Literal[0, 1] = element(default=1)
+
+
+class MultiphasicFSISolver(_BaseSolver, validate_assignment=True, skip_empty=True):
+    type: Literal["multiphasic"] = attr(default="multiphasic", frozen=True)
+    dtol: float = element(default=0.001, gt=0)
+    vtol: float = element(default=0.001, gt=0)
+    ftol: float = element(default=0.001, gt=0)
+    etol: float = element(default=0.01, ge=0)
+    rtol: float = element(default=0.001, ge=0)
+    ptol: float = element(default=0.01, ge=0)
+    ctol: float = element(default=0.01, ge=0)
+    rhoi: float = element(default=0, ge=0)
+    predictor: Literal[0, 1] = element(default=0)
+    min_volume_ratio: float = element(default=0, ge=0)
+    order: Literal[1, 2] = element(default=2)
+    force_positive_concentrations: Literal[0, 1] = element(default=1)
 
 
 class ExplicitSolver(BaseXmlModel, validate_assignment=True, skip_empty=True):
     type: Literal["explicit-solid"] = attr(default="explicit-solid", frozen=True)
     mass_lumping: Literal[1, 2] = element(default=1)
     dyn_damping: Literal[1] | float = element(default=1)
+    mixed_formulation: Literal[0, 1] | None = element(default=None, frozen=True)
+
+
+class CGSolidSolver(BaseXmlModel, validate_assignment=True, skip_empty=True):
+    type: Literal["CG-solid"] = attr(default="CG-solid", frozen=True)
+    symmetric_stiffness: Literal["symmetric", "non-symmetric", "symmetric-structure", "preferred"] = element(default="non-symmetric")
+    equation_scheme: Literal["staggered", "block"] = element(default="staggered")
+    equation_order: Literal["default", "reverse", "febio2"] = element(default="default")
+    optimize_bw: Literal[0, 1] = element(default=0)
+    lstol: float = element(default=0.9, ge=0)
+    lsmin: float = element(default=1e-15, gt=0)
+    lsiter: int = element(default=10, ge=0)
+    dtol: float = element(default=1e-6, gt=0)
+    etol: float = element(default=0.01, ge=0)
+    rtol: float = element(default=0, ge=0)
+    min_residual: float = element(default=1e-20, gt=0.0)
+    beta: float = element(default=0.25)
+    gamma: float = element(default=0.5)
+    cgmethod: Literal[0, 1] = element(default=0)
+    preconditioner: Literal[0, 1] = element(default=0)
 
 
 class Control(BaseXmlModel, tag="Control", validate_assignment=True):
@@ -81,4 +175,4 @@ class Control(BaseXmlModel, tag="Control", validate_assignment=True):
     output_stride: int = element(default=1)
     adaptor_re_solve: int = element(default=1)
     time_stepper: TimeStepper | None = element(default=TimeStepper())
-    solver: Solver | ExplicitSolver = element(default=Solver())
+    solver: SolidSolver | BiphasicSolver | MultiphasicSolver | ExplicitSolver | CGSolidSolver = element(default=SolidSolver())

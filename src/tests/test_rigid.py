@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 from typing import get_args
 
 import pytest
@@ -7,7 +8,7 @@ import pyfebio as feb
 
 
 @pytest.fixture(scope="module")
-def base_model(rigid_body_febmesh) -> feb.model.Model:
+def base_model(rigid_body_febmesh: feb.mesh.Mesh) -> feb.model.Model:
     my_model = feb.model.Model(mesh_=rigid_body_febmesh)
     for i, element in enumerate(my_model.mesh_.elements):
         my_model.material_.add_material(feb.material.RigidBody(id=i + 1, name=element.name, center_of_mass="1.0,0.5,4.5"))
@@ -16,7 +17,7 @@ def base_model(rigid_body_febmesh) -> feb.model.Model:
     return my_model
 
 
-def test_prescribed_displacement_rotation(base_model, tmp_path):
+def test_prescribed_displacement_rotation(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.rigid_.add_rigid_bc(
         feb.rigid.RigidPrescribed(type="rigid_rotation", rb="bodyB", dof="Ru", value=feb.rigid.Value(lc=1, text=0.7535))
@@ -36,7 +37,7 @@ def test_prescribed_displacement_rotation(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidPrescribedDisplacementRotation.feb failed to run"
 
 
-def test_prescribed_rotation_about_vector(base_model, tmp_path):
+def test_prescribed_rotation_about_vector(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.rigid_.add_rigid_bc(
         feb.rigid.RigidBodyRotationVector(
@@ -52,7 +53,7 @@ def test_prescribed_rotation_about_vector(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidPrescribedRotationAboutVector.feb failed to run"
 
 
-def test_prescribed_euler_rotation(base_model, tmp_path):
+def test_prescribed_euler_rotation(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.rigid_.add_rigid_bc(
         feb.rigid.RigidBodyEulerAngle(
@@ -68,11 +69,10 @@ def test_prescribed_euler_rotation(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidEulerRotation.feb failed to run"
 
 
-def test_rigid_spherical_joint(base_model, tmp_path):
+def test_rigid_spherical_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 20
     my_model.control_.step_size = 0.1
-    my_model.control_.time_stepper = None
     spherical_joint = feb.rigid.RigidSphericalJoint(
         name="spherical_a-b",
         body_a="bodyA",
@@ -91,11 +91,10 @@ def test_rigid_spherical_joint(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidSphericalJoint.feb failed to run"
 
 
-def test_rigid_revolute_joint(base_model, tmp_path):
+def test_rigid_revolute_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
-    my_model.control_.time_stepper = None
     joint = feb.rigid.RigidRevoluteJoint(
         name="revolute_a-b",
         body_a="bodyA",
@@ -112,7 +111,7 @@ def test_rigid_revolute_joint(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidRevoluteJoint.feb failed to run"
 
 
-def test_rigid_prismatic_joint(base_model, tmp_path):
+def test_rigid_prismatic_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
@@ -134,7 +133,7 @@ def test_rigid_prismatic_joint(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidPrismaticJoint.feb failed to run"
 
 
-def test_rigid_cylindrical_joint(base_model, tmp_path):
+def test_rigid_cylindrical_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
@@ -158,7 +157,7 @@ def test_rigid_cylindrical_joint(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidCylindricalJoint.feb failed to run"
 
 
-def test_rigid_planar_joint(base_model, tmp_path):
+def test_rigid_planar_joint(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
@@ -186,7 +185,7 @@ def test_rigid_planar_joint(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidCylindricalJoint.feb failed to run"
 
 
-def test_rigid_lock(base_model, tmp_path):
+def test_rigid_lock(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.time_steps = 1
     my_model.control_.step_size = 1.0
@@ -206,7 +205,7 @@ def test_rigid_lock(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidLock.feb failed to run"
 
 
-def test_rigid_spring(base_model, tmp_path):
+def test_rigid_spring(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.solver = feb.control.ExplicitSolver()
     my_model.control_.analysis = "DYNAMIC"
@@ -231,7 +230,7 @@ def test_rigid_spring(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidSpring.feb failed to run"
 
 
-def test_rigid_spring_and_damper(base_model, tmp_path):
+def test_rigid_spring_and_damper(base_model: feb.model.Model, tmp_path: Path):
     c = 4.021238e-4 / 10.0
     my_model = deepcopy(base_model)
     my_model.control_.solver = feb.control.ExplicitSolver()
@@ -266,7 +265,7 @@ def test_rigid_spring_and_damper(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidSpringDamper.feb failed to run"
 
 
-def test_rigid_angular_damper(base_model, tmp_path):
+def test_rigid_angular_damper(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "DYNAMIC"
     my_model.control_.time_steps = 10
@@ -297,7 +296,7 @@ def test_rigid_angular_damper(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=True) == 0, "RigidDampedCylindricalJoint.feb failed to run"
 
 
-def test_rigid_contractile_force(base_model, tmp_path):
+def test_rigid_contractile_force(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "DYNAMIC"
     my_model.control_.time_steps = 10
@@ -318,7 +317,7 @@ def test_rigid_contractile_force(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidContractileForce.feb failed to run"
 
 
-def test_rigid_force(base_model, tmp_path):
+def test_rigid_force(base_model: feb.model.Model, tmp_path: Path):
     for load_type in (0, 1, 2):
         my_model = deepcopy(base_model)
         my_model.control_.analysis = "DYNAMIC"
@@ -347,7 +346,7 @@ def test_rigid_force(base_model, tmp_path):
         assert feb.model.run_model(model_name, silent=False) == 0, f"RigidForceType{load_type}.feb failed to run"
 
 
-def test_rigid_moment(base_model, tmp_path):
+def test_rigid_moment(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "DYNAMIC"
     my_model.control_.time_steps = 20
@@ -367,12 +366,12 @@ def test_rigid_moment(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidMoment.feb failed to run"
 
 
-def test_rigid_cable_load(base_model, tmp_path):
+def test_rigid_cable_load(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "STATIC"
     my_model.control_.time_steps = 10
     my_model.control_.step_size = 0.1
-    my_model.add_simple_rigid_body(name="ghostA", origin=[1.0, -2.0, 0.0])
+    my_model.add_simple_rigid_body(name="ghostA", origin=(1.0, -2.0, 0.0))
     my_model.rigid_.all_rigid_bcs = []
     my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="ghostA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=1, Rv_dof=1, Rw_dof=1))
     my_model.rigid_.add_rigid_bc(feb.rigid.RigidFixed(rb="bodyA", Rx_dof=1, Ry_dof=1, Rz_dof=1, Ru_dof=0, Rv_dof=1, Rw_dof=1))
@@ -407,7 +406,7 @@ def test_rigid_cable_load(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidCableLoad.feb failed to run"
 
 
-def test_rigid_follower_moment(base_model, tmp_path):
+def test_rigid_follower_moment(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "DYNAMIC"
     my_model.control_.time_steps = 100
@@ -429,7 +428,7 @@ def test_rigid_follower_moment(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidFollowerMoment.feb failed to run"
 
 
-def test_rigid_follower_force(base_model, tmp_path):
+def test_rigid_follower_force(base_model: feb.model.Model, tmp_path: Path):
     my_model = deepcopy(base_model)
     my_model.control_.analysis = "DYNAMIC"
     my_model.control_.time_steps = 100
@@ -451,7 +450,7 @@ def test_rigid_follower_force(base_model, tmp_path):
     assert feb.model.run_model(model_name, silent=False) == 0, "RigidFollowerForce.feb failed to run"
 
 
-def test_rigid_initial_conditions(base_model, tmp_path):
+def test_rigid_initial_conditions(base_model: feb.model.Model, tmp_path: Path):
     for ic in get_args(feb.rigid.RigidInitialConditionType):
         my_model = deepcopy(base_model)
         my_model.control_.analysis = "DYNAMIC"
