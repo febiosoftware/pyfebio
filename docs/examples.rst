@@ -209,3 +209,173 @@ Output:
     Displacement at state 5 of first 2 nodes
     [[0.0000000e+00 0.0000000e+00 0.0000000e+00]
     [1.1734079e+00 3.4618369e-01 4.2698154e-04]]
+
+OpenKnee Biphasic
+-----------------
+
+Overview
+~~~~~~~~
+
+This example uses geometry from the OpenKnee(s) project specimen 003.
+The femoral and tibial cartilage have been simplified to quadratic
+triangular (6 node) elements. This substantially reduces computational
+cost but comes with some concessions. With the current shell capabilities, we
+can only apply fixed boundary conditions to the bottom shell nodes. This enables
+us to fix the bottom nodes of the tibial cartilage, since we assume the tibia
+does not move.
+
+We make the femoral cartilage rigid, so we can move it in the z-direction. Due to
+this assumption and the lack of menisci this model overestimates the articular
+cartilage contact pressure.
+
+Note that we do not include geometry for the femur or tibia, as these are not necessary
+for this simulation.
+
+Our model simulates creep under compressive loading applied to the femoral rigid
+body. The default conditions are:
+
+- Compressive femoral force of -500 N in the z-direction ramped linearly over 1.0 seconds
+- -500 N force held constant for 600.0 additional seconds, as the tibial cartilage creeps.
+
+Most simulation parameters are defined as variables at the beginning of the script. Variation
+of these parameters can be explored, but note that convergence of biphasic analyses can be
+challenging, so parameters should be changed reasonably.
+
+Some important considerations:
+
+- mixed_formulation=1 is defined in the Control section. This utilizes quadratic
+  shape functions for solid displacements and forces, but linear shape functions
+  for the fluid pressures and fluxes. This was found to provide better convergence
+  than using quadratic shape functions for both phases. An argument for this is that
+  Laplace's equation is of degree 2 while Darcy's Law is of degree 1.
+- Broyden's method is used because our stiffness matrix is non-symmetric
+- ls_check_jacobians=1 is defined in the Control section. This allows the line search
+  to continue even if a negative Jacobian is encountered. Often a step size can be
+  found to overcome the negative Jacobian and the search.
+
+Script
+~~~~~~
+
+Consult the script code and comments for more details.
+
+.. literalinclude:: ../src/examples/openknee_biphasic.py
+    :language: python
+
+Example Results
+~~~~~~~~~~~~~~~
+
+.. figure:: _static/openknee_biphasic.webp
+    :width: 1920px
+    :align: center
+
+    Simulations of -500 N compression applied over 1.0 seconds and held for 600 additional seconds.
+    Notice the relative volume change of the tibial cartilage shell elements as the cartilage creeps.
+    The vectors represent the current fluid fluxes dynamically scaled to the value range in each time step.
+    Likewise, the relative volume colors are dynamically adjusted. Click the image for full-size.
+
+OpenKnee Elastic
+----------------
+
+TLDR
+~~~~
+
+Run the example with default settings:
+
+.. code-block:: bash
+
+    python openknee_elastic.py
+
+See help for CLI arguments:
+
+.. code-block:: bash
+
+    python openknee_elastic.py --help
+
+Overview
+~~~~~~~~
+
+This example uses geometry from the OpenKnee(s) project specimen 003.
+The femoral and tibial cartilage have been simplified to quadratic
+triangular (6 node) elements. This substantially reduces computational
+cost but comes with some concessions. With the current shell capabilities, we
+can only apply fixed boundary conditions to the bottom shell nodes. This enables
+us to fix the bottom nodes of the tibial cartilage, since we assume the tibia
+does not move. The femoral geometry is included just for visualization, and has
+no effect on then simulation.
+
+We defined a pydantic BaseModel to configure the model parameters.
+Possibly of interest , we have defined a flag to choose between 3 levels of mesh refinement:
+
+- COARSE (3mm edge),
+- MEDIUM (2mm edge), and
+- FINE (1mm edge),
+
+which have substantially differing computational cost.
+
+FEBio Features Demonstrated:
+
+- Multistep Analysis
+- Shell Boundary Conditions
+- Rigid Cylindrical Joints
+- Discrete nonlinear spring definition
+
+    - A Blankevoort spring model defined using the string expression with appropriate Heaviside functions
+      to make tension-only with a toe region and allow for prestrain definition
+
+Additional Techniques Demonstrated:
+
+- Defining a pydantic BaseModel for this particular study configuration
+- Creating a parser that allows for overriding some configuration parameters from the command line interface
+
+Simulation Details:
+
+- Global Settings and Components:
+
+  - Contact between the femoral and tibial cartilage is defined as SlidingElastic and enforced with the
+    Augmented Lagrangian method
+  - The Tibia is fixed in space
+  - The bottom nodes of the tibial cartilage shells are fixed in space.
+  - The femoral cartilage is rigidly constrained to the femoral rigid body.
+  - The ligaments are defined based on a LigamentConfig model. The default configuration
+    is contained in `ligament.json`
+
+- Step 1: A compressive load is applied to the femur in the Z-direction with rotation about the X-axis fixed
+  and all other DoF free.
+
+- Step 2: The compressive load from Step 1 is kept constant, but a chain of 3 cylindrical joints is defined to
+  control relative rigid body motion in the convention of Grood and Suntay (1983).
+
+  - The chain starts at the tibia rigid body, which is fixed in space.
+  - The tibiaGhost rigid body is constrained to translate along and rotate about the IE_rot_IS_translation (E3)
+    cylindrical axis relative to the tibia rigid body.
+  - The femurGhost rigid body is constrained to translate along and rotate about the VV_rot_AS_translation (E2)
+    cylindrical axis relative to the tibiaGhost rigid body.
+  - The femur rigid body is constrained to translate along and rotate about the Flexion_rot_ML_translation (E1)
+    cylindrical axis relative to the femurGhost rigid body.
+  - The flexion angle is prescribed, while all other joint DoFs are left free.
+
+Script
+~~~~~~
+
+Consult the script code and comments for more details:
+
+.. literalinclude:: ../src/examples/openknee_elastic.py
+   :language: python
+
+Ligament Configuration
+~~~~~~~~~~~~~~~~~~~~~~
+
+The default ligament configuration is shown below:
+
+.. literalinclude:: ../src/examples/ligaments.json
+   :language: json
+
+Example Results
+~~~~~~~~~~~~~~~
+
+.. figure:: _static/openknee_elastic.webp
+    :width: 1920px
+    :align: center
+
+    Simulations using the FINE and COARSE meshes with default settings: -500 N compression, 45° flexion.
+    Click the image for full-size.
