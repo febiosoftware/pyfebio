@@ -492,6 +492,10 @@ def _parse_domain(buffer: bytes) -> dict[str, Any]:
             case "PLT_DOM_ELEM_LIST":
                 domain_dict["elements"] = _parse_dom_elem_list(child)
         i += 8 + offset
+    # FEBio writes a name only for solid domains; shell, beam, and discrete domains
+    # have none, so fall back to one built from the domain id.
+    if not domain_dict.get("name"):
+        domain_dict["name"] = f"domain{domain_dict['id'][0]}"
     return domain_dict
 
 
@@ -671,8 +675,10 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                 i += 8 + offset
             case "PLT_DOMAIN_SECTION":
                 domains = _parse_domain_section(child)
-                for domain in domains:
-                    mesh_dict["domains"][domain["id"][0]] = domain["name"]
+                # State data refers to domains by 1-based position in this section,
+                # not by the header's part id (the material id), so key by position.
+                for position, domain in enumerate(domains, start=1):
+                    mesh_dict["domains"][position] = domain["name"]
                     dset_path = f"/meshes/{mesh_cnt}/domains/{domain['name']}"
                     f.create_dataset(dset_path, data=domain["elements"], dtype=_DTYPES["int32"])
                     for key, value in domain.items():
@@ -686,7 +692,7 @@ def parse_mesh(buffer: bytes, mesh_cnt: int, f):
                     dset_path = f"/meshes/{mesh_cnt}/surfaces/{surface['name']}"
                     f.create_dataset(dset_path, data=surface["faces"], dtype=_DTYPES["int32"])
                     for key, value in surface.items():
-                        if key != "surfaces":
+                        if key != "faces":
                             f[dset_path].attrs[key] = value
                 i += 8 + offset
             case "PLT_NODESET_SECTION":
